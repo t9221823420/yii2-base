@@ -1,0 +1,23 @@
+{
+  "name": "yozh/yii2-base",
+  "description": "Description",
+  "type": "yii2-extension",
+  "keywords": ["yii2","extension"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ivan Kryazhev",
+      "email": "t9221823420@gmail.com",
+      "homepage": "https://github.com/t9221823420"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "yiisoft/yii2": "~2.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "yozh\\base\\": "src"
+    }
+  }
+}
