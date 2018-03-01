@@ -14,13 +14,16 @@ class Bootstrap implements BootstrapInterface
 		
 		$moduleId = ( ( new \ReflectionObject( $this ) )->getNamespaceName() . '\Module' )::MODULE_ID;
 		
+		
+		$foo = $app->getUrlManager();
+		
 		$app->getUrlManager()->addRules( [
 			
 			// remove module/default/action
 			[
 				'class' => UrlRule::classname(),
-				'pattern' => '<controller:[\w\-]+>/<action:[\w\-]+>',
-				'route' => '/<controller>/<action>'
+				'pattern' => $moduleId . '/<action:[\w\-]+>',
+				'route' => $moduleId . '/<action>'
 			],
 			[
 				'class' => UrlRule::classname(),
@@ -30,8 +33,7 @@ class Bootstrap implements BootstrapInterface
 			
 			$moduleId => $moduleId . '/default/index',
 		
-		], false )
-		;
+		], false );
 		
 		$app->setModule( $moduleId, 'yozh\\' . $moduleId . '\Module' );
 		
