@@ -14,9 +14,6 @@ class Bootstrap implements BootstrapInterface
 		
 		$moduleId = ( ( new \ReflectionObject( $this ) )->getNamespaceName() . '\Module' )::MODULE_ID;
 		
-		
-		$foo = $app->getUrlManager();
-		
 		$app->getUrlManager()->addRules( [
 			
 			// remove module/default/action
