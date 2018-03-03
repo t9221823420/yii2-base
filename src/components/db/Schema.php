@@ -21,16 +21,20 @@ class Schema extends \yii\db\mysql\Schema
 	{
 		parent::__construct( $config );
 		
-		static::$_instance = new self();
+		static::$_instance->typeMap['enum'] = static::TYPE_ENUM;
+		static::$_instance->typeMap['set']  = static::TYPE_SET;
 		
-		static::$_instance->typeMap[ 'enum' ] = static::TYPE_ENUM;
-		static::$_instance->typeMap[ 'set' ] = static::TYPE_SET;
-		
+	}
+	
+	static public function initSi()
+	{
+	
 	}
 	
 	static public function getTypes()
 	{
-		return array_keys( static::$_instance->typeMap );
+		
+		return static::getTypeMap( true );
 		
 		/*
 		$types = array_merge(
@@ -50,12 +54,18 @@ class Schema extends \yii\db\mysql\Schema
 		*/
 	}
 	
-	static public function getTypeMap()
+	static public function getTypeMap( $keys = false )
 	{
-		return static::$_instance->typeMap;
-	}
+		if( null === self::$_instance ) {
+			self::$_instance = new self();
+		}
 		
-		protected function loadTableSchema( $name )
+		$typeMap = static::$_instance->typeMap;
+		
+		return $keys ? array_keys( $typeMap ) : $typeMap;
+	}
+	
+	protected function loadTableSchema( $name )
 	{
 		parent::loadTableSchema( $name );
 	}

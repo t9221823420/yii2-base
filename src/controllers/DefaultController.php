@@ -8,7 +8,7 @@
 
 namespace yozh\base\controllers;
 
-use yozh\properties\models\PropertiesModel;
+use yii\db\ActiveRecord;
 
 use yii\web\Controller;
 use yii\filters\AccessControl;
@@ -17,7 +17,7 @@ class DefaultController extends Controller
 {
 	protected static function primaryModel()
 	{
-		return PropertiesModel::className();
+		return ActiveRecord::className();
 	}
 	
 	public function behaviors()
@@ -35,5 +35,23 @@ class DefaultController extends Controller
 		];
 	}
 	
+	/**
+	 * @param $primaryKey
+	 * @return null|static
+	 * @throws NotFoundHttpException
+	 */
+	protected function _findModel( $condition )
+	{
+		
+		/** @var ActiveRecord $primaryModel */
+		$primaryModel = static::primaryModel();
+		
+		if( ( $model = $primaryModel::findOne( $condition ) ) !== null ) {
+			return $model;
+		}
+		
+		throw new \yii\web\NotFoundHttpException();
+		
+	}
 	
 }

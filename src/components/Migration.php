@@ -15,6 +15,7 @@ class Migration extends \yii\db\Migration
 {
 	const ALTER_MODE_UPDATE = 'update';
 	const ALTER_MODE_DROP   = 'drop';
+	const ALTER_MODE_IGNORE = 'ignore';
 	
 	protected static $_table   = 'table';
 	protected static $_columns = [];
@@ -83,24 +84,27 @@ class Migration extends \yii\db\Migration
 		
 	}
 	
-	public function alterTable( $table = null, $columns = null, $options = null, $mode = self::ALTER_MODE_UPDATE )
+	public function alterTable( $params = [] )
 	{
-		$table   = $table ?? static::$_table;
-		$columns = $columns ?? static::$_columns;
 		
-		if( isset( $options['indices'] ) ) { //
-			$indices = $options['indices'];
-		}
-		else {
-			$indices = static::$_indices;
-		}
+		/**
+		 * @var $table string
+		 * @var $columns array
+		 * @var $indices array
+		 * @var $references array
+		 * @var $mode string
+		 * @var $options array
+		 */
+		$defaults = [
+			'table'      => static::$_table,
+			'columns'    => static::$_columns,
+			'indices'    => static::$_indices,
+			'references' => static::$_references,
+			'mode'       => self::ALTER_MODE_UPDATE,
+			'options'    => [],
+		];
 		
-		if( isset( $options['references'] ) ) { //
-			$references = $options['references'];
-		}
-		else {
-			$references = static::$_references;
-		}
+		extract( array_replace( $defaults, array_intersect_key( $params, $defaults ) ) );
 		
 		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table ) ) {
 			
