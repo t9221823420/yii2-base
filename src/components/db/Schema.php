@@ -31,7 +31,7 @@ class Schema extends \yii\db\mysql\Schema
 	
 	}
 	
-	static public function getTypes()
+	static public function getTypesList()
 	{
 		
 		return static::getTypeMap( true );
@@ -53,6 +53,8 @@ class Schema extends \yii\db\mysql\Schema
 		return $types;
 		*/
 	}
+	
+
 	
 	static public function getTypeMap( $keys = false )
 	{
