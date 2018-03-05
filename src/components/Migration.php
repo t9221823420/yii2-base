@@ -10,6 +10,7 @@ namespace yozh\base\components;
 
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
+use yozh\base\components\ArrayHelper as arr;
 
 class Migration extends \yii\db\Migration
 {
@@ -104,7 +105,7 @@ class Migration extends \yii\db\Migration
 			'options'    => [],
 		];
 		
-		extract( array_replace( $defaults, array_intersect_key( $params, $defaults ) ) );
+		extract( arr::defaults( $params, $defaults ) );
 		
 		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table ) ) {
 			
