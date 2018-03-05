@@ -102,7 +102,7 @@ class Migration extends \yii\db\Migration
 			'indices'    => static::$_indices,
 			'references' => static::$_references,
 			'mode'       => self::ALTER_MODE_UPDATE,
-			'options'    => [],
+			'options'    => null,
 		];
 		
 		extract( arr::defaults( $params, $defaults ) );
@@ -129,6 +129,11 @@ class Migration extends \yii\db\Migration
 			
 		}
 		else {
+			
+			foreach( $columns as $column ) {
+				$column->after( null );
+			}
+			
 			parent::createTable( $table, $columns, $options );
 		}
 		

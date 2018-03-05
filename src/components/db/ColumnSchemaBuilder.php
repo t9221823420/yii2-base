@@ -17,7 +17,7 @@ class ColumnSchemaBuilder extends \yii\db\ColumnSchemaBuilder
 	
 	public $listValues = [];
 	
-	public function __construct( string $type, $length = null, ?Connection $db = null, array $config = [] )
+	public function __construct( string $type, $length = null, Connection $db = null, array $config = [] )
 	{
 		parent::__construct( $type, $length, $db, $config );
 		
