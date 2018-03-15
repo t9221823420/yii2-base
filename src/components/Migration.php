@@ -18,40 +18,22 @@ class Migration extends \yii\db\Migration
 	const ALTER_MODE_DROP   = 'drop';
 	const ALTER_MODE_IGNORE = 'ignore';
 	
-	protected static $_table   = 'table';
-	protected static $_columns = [];
+	protected static $_table = 'table';
 	
-	protected static $_references = [
-		/*
-		[
-			'refTable'  => 'tree',
-			'refColumn' => 'id',
-			'column'    => 'tree_id',
-		],
-		*/
-	];
-	
-	protected static $_indices = [
-		/*
-		[
-			'column' => 'tree_id',
-		],
-		*/
-	];
-	
-	public function safeUp()
+	public function safeUp( $params = [] )
 	{
-		$table = $table ?? static::$_table;
+		$defaults = [
+			'table' => static::$_table,
+			'mode'  => self::ALTER_MODE_UPDATE,
+		];
+		
+		extract( arr::defaults( $params, $defaults ) );
 		
 		$refTable = $refColumn = $column = null;
 		
-		static::$_columns = [
-			'id' => $this->primaryKey(),
-		];
+		$this->alterTable( $params );
 		
-		$this->alterTable();
-		
-		foreach( static::$_indices as $index ) {
+		foreach( static::getIndices() as $index ) {
 			
 			extract( $index );
 			
@@ -63,7 +45,7 @@ class Migration extends \yii\db\Migration
 			
 		}
 		
-		foreach( static::$_references as $ref ) {
+		foreach( static::getReferences() as $ref ) {
 			
 			extract( $ref );
 			
@@ -83,6 +65,8 @@ class Migration extends \yii\db\Migration
 			);
 		}
 		
+		return true;
+		
 	}
 	
 	public function alterTable( $params = [] )
@@ -98,9 +82,9 @@ class Migration extends \yii\db\Migration
 		 */
 		$defaults = [
 			'table'      => static::$_table,
-			'columns'    => static::$_columns,
-			'indices'    => static::$_indices,
-			'references' => static::$_references,
+			'columns'    => static::_getColumns(),
+			'indices'    => static::getIndices(),
+			'references' => static::getReferences(),
 			'mode'       => self::ALTER_MODE_UPDATE,
 			'options'    => null,
 		];
@@ -139,11 +123,42 @@ class Migration extends \yii\db\Migration
 		
 	}
 	
+	protected function _getColumns( $columns = [] )
+	{
+		return array_merge_recursive( [
+			'id' => $this->primaryKey(),
+		], $columns );
+	}
+	
+	protected function getIndices( $indices = [] )
+	{
+		return array_merge_recursive( [
+			/*
+			[
+				'column' => 'tree_id',
+			],
+			*/
+		], $indices );
+	}
+	
+	protected function getReferences( $references = [] )
+	{
+		return array_merge_recursive( [
+			/*
+			[
+				'refTable'  => 'tree',
+				'refColumn' => 'id',
+				'column'    => 'tree_id',
+			],
+			*/
+		], $references );
+	}
+	
 	protected function _safeDown( $table = null, $indices = null, $references = null )
 	{
 		$table      = $table ?? static::$_table;
-		$indices    = $indices ?? static::$_indices;
-		$references = $references ?? static::$_references;
+		$indices    = $indices ?? static::getIndices();
+		$references = $references ?? static::getReferences();
 		
 		$column = null;
 		

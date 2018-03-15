@@ -4,6 +4,7 @@ namespace yozh\base;
 
 use Yii;
 use yii\base\BootstrapInterface;
+use yii\console\controllers\MigrateController;
 use yozh\base\components\UrlRule;
 
 class Bootstrap implements BootstrapInterface
@@ -18,22 +19,42 @@ class Bootstrap implements BootstrapInterface
 			
 			// remove module/default/action
 			[
-				'class' => UrlRule::classname(),
+				'class'   => UrlRule::classname(),
 				'pattern' => $moduleId . '/<action:[\w\-]+>',
-				'route' => $moduleId . '/<action>'
+				'route'   => $moduleId . '/<action>',
 			],
 			[
-				'class' => UrlRule::classname(),
+				'class'   => UrlRule::classname(),
 				'pattern' => $moduleId . '/<action:[\w\-]+>',
-				'route' => $moduleId . '/default/<action>'
+				'route'   => $moduleId . '/default/<action>',
 			],
 			
 			$moduleId => $moduleId . '/default/index',
 		
-		], false );
+		], false )
+		;
 		
 		$app->setModule( $moduleId, 'yozh\\' . $moduleId . '\Module' );
 		
+		if( ( new \ReflectionObject( $app ) )->getNamespaceName() == 'yii\console' ) {
+			
+			if( !isset( $app->controllerMap['migrate']['migrationPath'] ) ) {
+				$app->controllerMap['migrate'] = [
+					'class'         => MigrateController::class,
+					'migrationPath' => [],
+				];
+			}
+			
+			foreach( $app->extensions as $name => $extension ) {
+				
+				$alias = key( $extension['alias'] );
+				$path  = reset( $extension['alias'] ) . '/migrations';
+				
+				if( strpos( $alias, '@yozh' ) === 0 && is_dir( $path ) ) {
+					$app->controllerMap['migrate']['migrationPath'][ $name ] = $path;
+				}
+			}
+		}
 	}
 	
 }
