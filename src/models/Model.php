@@ -4,27 +4,9 @@ namespace yozh\base\models;
 
 use Yii;
 
-class Model extends \yii\db\ActiveRecord
+abstract class Model extends \yii\db\ActiveRecord
 {
 	
-	/**
-     * @inheritdoc
-     */
-    public static function tableName()
-    {
-        return 'table';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function rules()
-    {
-        return [
-            [['id'], 'required'],
-        ];
-    }
-
     /**
      * @inheritdoc
      */
@@ -58,13 +40,4 @@ class Model extends \yii\db\ActiveRecord
 		return array_diff( array_keys($this->attributes),  $this->primaryKey(true) );;
 	}
     
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-	/*
-    public function getRelationRecords()
-    {
-        return $this->hasMany(RefModel::className(), ['ref_id' => 'table_id']);
-    }
-	*/
 }

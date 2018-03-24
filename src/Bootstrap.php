@@ -7,7 +7,7 @@ use yii\base\BootstrapInterface;
 use yii\console\controllers\MigrateController;
 use yozh\base\components\UrlRule;
 
-class Bootstrap implements BootstrapInterface
+abstract class Bootstrap implements BootstrapInterface
 {
 	
 	public function bootstrap( $app )

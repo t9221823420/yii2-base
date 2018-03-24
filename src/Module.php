@@ -4,7 +4,7 @@ namespace yozh\base;
 
 use \yii\base\Module as BaseModule;
 
-class Module extends BaseModule
+abstract class Module extends BaseModule
 {
 	public function createController( $route )
 	{
