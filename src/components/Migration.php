@@ -27,7 +27,7 @@ class Migration extends \yii\db\Migration
 			'mode'  => self::ALTER_MODE_UPDATE,
 		];
 		
-		extract( arr::defaults( $params, $defaults ) );
+		extract( arr::setDefaults( $params, $defaults ) );
 		
 		$refTable = $refColumn = $column = null;
 		
@@ -89,7 +89,7 @@ class Migration extends \yii\db\Migration
 			'options'    => null,
 		];
 		
-		extract( arr::defaults( $params, $defaults ) );
+		extract( arr::setDefaults( $params, $defaults ) );
 		
 		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table ) ) {
 			
