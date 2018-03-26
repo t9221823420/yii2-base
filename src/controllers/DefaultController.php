@@ -14,9 +14,8 @@ use yii\web\Controller;
 use yii\filters\AccessControl;
 use yii\web\Response;
 
-class DefaultController extends Controller
+abstract class DefaultController extends Controller
 {
-	
 	public function behaviors()
 	{
 		return [
@@ -32,6 +31,11 @@ class DefaultController extends Controller
 		];
 	}
 	
+	protected function _findModels( $condition, $modelClass = null )
+	{
+		return $this->_findModel( $condition, $modelClass, false );
+	}
+	
 	/**
 	 * @param $primaryKey
 	 * @return null|static
@@ -39,14 +43,8 @@ class DefaultController extends Controller
 	 */
 	protected function _findModel( $condition, $modelClass = null, $one = true )
 	{
-		if( method_exists( get_called_class(), 'defaultModel' ) ) { //
-			
-			/** @var ActiveRecord $defaultModel */
+		if( !( is_string( $modelClass ) && class_exists( $modelClass ) ) && method_exists( get_called_class(), 'defaultModel' ) ) {
 			$modelClass = static::defaultModel();
-			
-		}
-		else if( is_string( $modelClass ) && class_exists( $modelClass ) ) {
-			// something todo
 		}
 		else {
 			throw new \yii\base\InvalidParamException( 'It\'s have to be set a defaultModel() or $modelClass' );
@@ -55,11 +53,11 @@ class DefaultController extends Controller
 		if( $one && ( $Model = $modelClass::findOne( $condition ) ) !== null ) {
 			return $Model;
 		}
-		else{
+		else {
 			
 			$modelCollection = $modelClass::findAll( $condition );
 			
-			if( count($modelCollection) ){
+			if( count( $modelCollection ) ) {
 				return $modelCollection;
 			}
 			
@@ -69,14 +67,12 @@ class DefaultController extends Controller
 		
 	}
 	
-	protected function _findModels( $condition, $modelClass = null )
-	{
-		return $this->_findModel( $condition, $modelClass, false);
-	}
+	abstract protected static function defaultModel();
 	
 	/*
 	 * for backward compatibility
 	 */
+	
 	protected function findModel( $id )
 	{
 		return $this->_findModel( $id );
@@ -86,11 +82,11 @@ class DefaultController extends Controller
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
-		if ( is_array($data_type)  ){ //
+		if( is_array( $data_type ) ) { //
 			return [ 'result' => $data_type ];
 		}
-		else{ //
-			return [ 'result' => [ $data_type  => $value] ];
+		else { //
+			return [ 'result' => [ $data_type => $value ] ];
 		}
 		
 	}
