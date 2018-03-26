@@ -12,13 +12,13 @@ use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
 use yozh\base\components\ArrayHelper as arr;
 
-class Migration extends \yii\db\Migration
+abstract class Migration extends \yii\db\Migration
 {
-	const ALTER_MODE_UPDATE = 'update';
-	const ALTER_MODE_DROP   = 'drop';
-	const ALTER_MODE_IGNORE = 'ignore';
+	const ALTER_MODE_UPDATE = 'alter_mode_update';
+	const ALTER_MODE_DROP   = 'alter_mode_drop';
+	const ALTER_MODE_IGNORE = 'alter_mode_ignore';
 	
-	protected static $_table = 'table';
+	protected static $_columns = [];
 	
 	public function safeUp( $params = [] )
 	{
@@ -65,8 +65,6 @@ class Migration extends \yii\db\Migration
 			);
 		}
 		
-		return true;
-		
 	}
 	
 	public function alterTable( $params = [] )
@@ -82,7 +80,7 @@ class Migration extends \yii\db\Migration
 		 */
 		$defaults = [
 			'table'      => static::$_table,
-			'columns'    => static::_getColumns(),
+			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
 			'mode'       => self::ALTER_MODE_UPDATE,
@@ -123,27 +121,43 @@ class Migration extends \yii\db\Migration
 		
 	}
 	
-	protected function _getColumns( $columns = [] )
+	public function getColumns( $columns = [] )
 	{
-		return array_merge_recursive( [
+		return arr::merge( [
 			'id' => $this->primaryKey(),
 		], $columns );
 	}
 	
-	protected function getIndices( $indices = [] )
+	/*
+	 * By default Indices are generating from References
+	 */
+	public function getIndices( $indices = [] )
 	{
-		return array_merge_recursive( [
+		$indices = arr::merge( [
 			/*
 			[
 				'column' => 'tree_id',
 			],
 			*/
 		], $indices );
+		
+		$references = $this->getReferences();
+		
+		$indicesColumns    = arr::getColumn( $indices, 'column' );
+		$referencesColumns = arr::getColumn( $references, 'column' );
+		
+		foreach( array_diff( $indicesColumns, $referencesColumns ) as $column ) {
+			
+			$indices[] = [ 'column' => $column ];
+			
+		}
+		
+		return $indices;
 	}
 	
-	protected function getReferences( $references = [] )
+	public function getReferences( $references = [] )
 	{
-		return array_merge_recursive( [
+		return arr::merge( [
 			/*
 			[
 				'refTable'  => 'tree',
@@ -154,11 +168,15 @@ class Migration extends \yii\db\Migration
 		], $references );
 	}
 	
-	protected function _safeDown( $table = null, $indices = null, $references = null )
+	public function safeDown( $params = [] )
 	{
-		$table      = $table ?? static::$_table;
-		$indices    = $indices ?? static::getIndices();
-		$references = $references ?? static::getReferences();
+		$defaults = [
+			'table'      => static::$_table,
+			'indices'    => static::getIndices(),
+			'references' => static::getReferences(),
+		];
+		
+		extract( arr::setDefaults( $params, $defaults ) );
 		
 		$column = null;
 		
@@ -220,11 +238,6 @@ class Migration extends \yii\db\Migration
 		] );
 		
 		return $builder;
-	}
-	
-	public function safeDown()
-	{
-		$this->_safeDown();
 	}
 	
 	

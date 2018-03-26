@@ -4,7 +4,7 @@ namespace yozh\base;
 
 use Yii;
 use yii\base\BootstrapInterface;
-use yii\console\controllers\MigrateController;
+use yozh\base\controllers\MigrateController;
 use yozh\base\components\UrlRule;
 
 abstract class Bootstrap implements BootstrapInterface
