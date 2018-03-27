@@ -2,6 +2,7 @@
 
 namespace yozh\base;
 
+use Yii;
 use \yii\base\Module as BaseModule;
 
 abstract class Module extends BaseModule
@@ -28,4 +29,8 @@ abstract class Module extends BaseModule
 		
 	}
 	
+	public static function t( $category, $message, $params = [], $language = null )
+	{
+		return Yii::t( $category, $message, $params, $language );
+	}
 }

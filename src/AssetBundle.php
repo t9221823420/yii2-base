@@ -1,10 +1,29 @@
 <?php
-namespace yozh\template;
+namespace yozh\base;
 
 use Yii;
 
-abstract class AssetsBundle extends \yii\web\AssetBundle
+class AssetBundle extends \yii\web\AssetBundle
 {
+	public $sourcePath = __DIR__ .'/../assets/';
+	
+	public $css = [
+		//'css/yozh-base.css',
+		//['css/yozh-base.print.css', 'media' => 'print'],
+	];
+	
+	public $js = [
+		'js/yozh-base.js'
+	];
+	
+	public $publishOptions = [
+		'forceCopy'       => true,
+	];
+	
+	public $depends = [
+		// 'yii\web\YiiAsset',
+		// 'yii\bootstrap\BootstrapAsset',
+	];
 
 	public function registerAssetFiles( $view )
 	{
