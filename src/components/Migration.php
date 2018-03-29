@@ -10,15 +10,15 @@ namespace yozh\base\components;
 
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
-use yozh\base\components\ArrayHelper as arr;
+use yozh\base\components\ArrayHelper;
 
 abstract class Migration extends \yii\db\Migration
 {
-	const ALTER_MODE_UPDATE = 'alter_mode_update';
-	const ALTER_MODE_DROP   = 'alter_mode_drop';
-	const ALTER_MODE_IGNORE = 'alter_mode_ignore';
+	const ALTER_MODE_UPDATE     = 'alter_mode_update';
+	const ALTER_MODE_DROP_TABLE = 'alter_mode_drop_table';
+	const ALTER_MODE_IGNORE     = 'alter_mode_ignore';
 	
-	protected static $_columns = [];
+	protected static $_tableSchema;
 	
 	public function safeUp( $params = [] )
 	{
@@ -27,42 +27,80 @@ abstract class Migration extends \yii\db\Migration
 			'mode'  => self::ALTER_MODE_UPDATE,
 		];
 		
-		extract( arr::setDefaults( $params, $defaults ) );
+		/**
+		 * @var $table string
+		 * @var $mode string
+		 */
+		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
-		$refTable = $refColumn = $column = null;
-		
-		$this->alterTable( $params );
-		
-		foreach( static::getIndices() as $index ) {
+		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table, true ) ) {
 			
-			extract( $index );
+			$refTable = $refColumn = $column = null;
 			
-			$this->createIndex(
-				$this->_getIdxName( $table, $column ),
-				$table,
-				$column
-			);
+			$this->alterTable( $params );
 			
-		}
-		
-		foreach( static::getReferences() as $ref ) {
+			foreach( static::getIndices() as $index ) {
+				
+				/**
+				 * @var $refTable
+				 * @var $refColumn
+				 * @var $column
+				 */
+				extract( $index );
+				
+				$idxName = $this->_getIdxName( $table, $column );
+				
+				if( isset( $tableSchema->foreignKeys[ $idxName ] ) ) {
+					if( $mode == self::ALTER_MODE_UPDATE ) { //
+						//$this->alterColumn( $table, $key, $column );
+					}
+				}
+				else {
+					$this->createIndex(
+						$idxName,
+						$table,
+						$column
+					);
+				}
+				
+			}
 			
-			extract( $ref );
-			
-			$this->createIndex(
-				$this->_getIdxName( $table, $column ),
-				$table,
-				$column
-			);
-			
-			$this->addForeignKey(
-				$this->_getFkName( $table, $column ),
-				$table,
-				$column,
-				$refTable,
-				$refColumn,
-				'CASCADE'
-			);
+			foreach( static::getReferences() as $ref ) {
+				
+				/**
+				 * @var $refTable
+				 * @var $refColumn
+				 * @var $column
+				 */
+				extract( $ref );
+				
+				$fkName = $this->_getFkName( $table, $column );
+				$idxName = $this->_getIdxName( $table, $column );
+				
+				if( isset( $tableSchema->foreignKeys[ $fkName ] ) ) {
+					if( $mode == self::ALTER_MODE_UPDATE ) { //
+						// $this->alterColumn( $table, $key, $column );
+					}
+				}
+				else {
+					
+					$this->createIndex(
+						$idxName,
+						$table,
+						$column
+					);
+					
+					$this->addForeignKey(
+						$fkName,
+						$table,
+						$column,
+						$refTable,
+						$refColumn,
+						'CASCADE'
+					);
+				}
+				
+			}
 		}
 		
 	}
@@ -87,11 +125,11 @@ abstract class Migration extends \yii\db\Migration
 			'options'    => null,
 		];
 		
-		extract( arr::setDefaults( $params, $defaults ) );
+		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
 		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table ) ) {
 			
-			if( $mode == self::ALTER_MODE_DROP ) {
+			if( $mode == self::ALTER_MODE_DROP_TABLE ) {
 				$this->_safeDown( $table, $indices, $references );
 			}
 			
@@ -123,7 +161,7 @@ abstract class Migration extends \yii\db\Migration
 	
 	public function getColumns( $columns = [] )
 	{
-		return arr::merge( [
+		return ArrayHelper::merge( [
 			'id' => $this->primaryKey(),
 		], $columns );
 	}
@@ -133,7 +171,7 @@ abstract class Migration extends \yii\db\Migration
 	 */
 	public function getIndices( $indices = [] )
 	{
-		$indices = arr::merge( [
+		$indices = ArrayHelper::merge( [
 			/*
 			[
 				'column' => 'tree_id',
@@ -143,8 +181,8 @@ abstract class Migration extends \yii\db\Migration
 		
 		$references = $this->getReferences();
 		
-		$indicesColumns    = arr::getColumn( $indices, 'column' );
-		$referencesColumns = arr::getColumn( $references, 'column' );
+		$indicesColumns    = ArrayHelper::getColumn( $indices, 'column' );
+		$referencesColumns = ArrayHelper::getColumn( $references, 'column' );
 		
 		foreach( array_diff( $indicesColumns, $referencesColumns ) as $column ) {
 			
@@ -157,7 +195,7 @@ abstract class Migration extends \yii\db\Migration
 	
 	public function getReferences( $references = [] )
 	{
-		return arr::merge( [
+		return ArrayHelper::merge( [
 			/*
 			[
 				'refTable'  => 'tree',
@@ -168,6 +206,16 @@ abstract class Migration extends \yii\db\Migration
 		], $references );
 	}
 	
+	private function _getIdxName( $table, $column )
+	{
+		return "idx-$table-$column";
+	}
+	
+	private function _getFkName( $table, $column )
+	{
+		return "fk-$table-$column";
+	}
+	
 	public function safeDown( $params = [] )
 	{
 		$defaults = [
@@ -176,7 +224,7 @@ abstract class Migration extends \yii\db\Migration
 			'references' => static::getReferences(),
 		];
 		
-		extract( arr::setDefaults( $params, $defaults ) );
+		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
 		$column = null;
 		
@@ -208,16 +256,6 @@ abstract class Migration extends \yii\db\Migration
 		}
 		
 		$this->dropTable( $table );
-	}
-	
-	private function _getFkName( $table, $column )
-	{
-		return "fk-$table-$column";
-	}
-	
-	private function _getIdxName( $table, $column )
-	{
-		return "idx-$table-$column";
 	}
 	
 	public function enum( $values = [] )
