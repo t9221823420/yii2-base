@@ -9,7 +9,13 @@
 namespace yozh\base\components\db;
 
 use yii\base\BaseObject;
+use yozh\base\components\Migration;
 
+/**
+ * Class Schema
+ * @package yozh\base\components\db
+ * @used-by Migration::enum() && Migration::set()
+ */
 class Schema extends \yii\db\mysql\Schema
 {
 	const TYPE_ENUM = 'enum';
@@ -26,49 +32,5 @@ class Schema extends \yii\db\mysql\Schema
 		
 	}
 	
-	static public function initSi()
-	{
 	
-	}
-	
-	static public function getTypesList()
-	{
-		
-		return static::getTypeMap( true );
-		
-		/*
-		$types = array_merge(
-			( new \ReflectionClass( 'yii\db\Schema' ) )->getConstants(),
-			( new \ReflectionClass( self::class ) )->getConstants()
-		);
-		
-		$result = [];
-		
-		foreach( $types as $key => $type ) {
-			if( strpos( $key, 'TYPE_' ) === false ) {
-				unset( $types[ $key ] );
-			}
-		}
-		
-		return $types;
-		*/
-	}
-	
-
-	
-	static public function getTypeMap( $keys = false )
-	{
-		if( null === self::$_instance ) {
-			self::$_instance = new self();
-		}
-		
-		$typeMap = static::$_instance->typeMap;
-		
-		return $keys ? array_keys( $typeMap ) : $typeMap;
-	}
-	
-	protected function loadTableSchema( $name )
-	{
-		parent::loadTableSchema( $name );
-	}
 }

@@ -48,20 +48,24 @@ abstract class Migration extends \yii\db\Migration
 				 */
 				extract( $index );
 				
-				$idxName = $this->_getIdxName( $table, $column );
+				$idxName      = $this->_getIdxName( $table, $column );
+				$tableIndices = static::getTableIndices( $table );
 				
-				if( isset( $tableSchema->foreignKeys[ $idxName ] ) ) {
-					if( $mode == self::ALTER_MODE_UPDATE ) { //
-						//$this->alterColumn( $table, $key, $column );
-					}
+				if( isset( $tableIndices[ $idxName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
+					continue;
 				}
-				else {
-					$this->createIndex(
+				else if( isset( $tableIndices[ $idxName ] ) && $mode == self::ALTER_MODE_UPDATE ) {
+					$this->dropIndex(
 						$idxName,
-						$table,
-						$column
+						$table
 					);
 				}
+				
+				$this->createIndex(
+					$idxName,
+					$table,
+					$column
+				);
 				
 			}
 			
@@ -74,31 +78,40 @@ abstract class Migration extends \yii\db\Migration
 				 */
 				extract( $ref );
 				
-				$fkName = $this->_getFkName( $table, $column );
+				$fkName  = $this->_getFkName( $table, $column );
 				$idxName = $this->_getIdxName( $table, $column );
+				$tableForeignKeys = $tableSchema->foreignKeys;
 				
-				if( isset( $tableSchema->foreignKeys[ $fkName ] ) ) {
-					if( $mode == self::ALTER_MODE_UPDATE ) { //
-						// $this->alterColumn( $table, $key, $column );
-					}
+				if( isset( $tableForeignKeys[ $fkName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
+					continue;
 				}
-				else {
+				else if( isset( $tableForeignKeys[ $fkName ] ) && $mode == self::ALTER_MODE_UPDATE ) {
 					
-					$this->createIndex(
-						$idxName,
-						$table,
-						$column
-					);
-					
-					$this->addForeignKey(
+					$this->dropForeignKey(
 						$fkName,
-						$table,
-						$column,
-						$refTable,
-						$refColumn,
-						'CASCADE'
+						$table
+					);
+					
+					$this->dropIndex(
+						$idxName,
+						$table
 					);
 				}
+				
+				$this->createIndex(
+					$idxName,
+					$table,
+					$column
+				);
+				
+				$this->addForeignKey(
+					$fkName,
+					$table,
+					$column,
+					$refTable,
+					$refColumn,
+					'CASCADE'
+				);
 				
 			}
 		}
@@ -169,6 +182,7 @@ abstract class Migration extends \yii\db\Migration
 	/*
 	 * By default Indices are generating from References
 	 */
+	
 	public function getIndices( $indices = [] )
 	{
 		$indices = ArrayHelper::merge( [
@@ -211,6 +225,21 @@ abstract class Migration extends \yii\db\Migration
 		return "idx-$table-$column";
 	}
 	
+	public static function getTableIndices( $table, $refresh = false )
+	{
+		static $data = [];
+		
+		if( isset( $data['$table'] ) ) {
+			return $data['$table'];
+		}
+		$indexes = \Yii::$app->db->schema->getTableIndexes( $table, $refresh );
+		
+		foreach( $indexes as $index ) {
+			$data[ $table ][ $index->name ] = $index;
+		}
+		
+	}
+	
 	private function _getFkName( $table, $column )
 	{
 		return "fk-$table-$column";
@@ -224,6 +253,11 @@ abstract class Migration extends \yii\db\Migration
 			'references' => static::getReferences(),
 		];
 		
+		/**
+		 * @var $table string
+		 * @var $indices array
+		 * @var $references array
+		 */
 		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
 		$column = null;
@@ -277,6 +311,5 @@ abstract class Migration extends \yii\db\Migration
 		
 		return $builder;
 	}
-	
 	
 }
