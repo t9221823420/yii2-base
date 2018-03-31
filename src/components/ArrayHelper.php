@@ -10,46 +10,59 @@ namespace yozh\base\components;
 
 class ArrayHelper extends \yii\helpers\ArrayHelper
 {
-	
 	const DEFAULTS_MODE_ADD    = 'defaults_mode_add';
 	const DEFAULTS_MODE_FILTER = 'defaults_mode_filter';
+	const DEFAULTS_REQUIRED    = 'defaults_required';
 	
-	const BY_PATH_TYPE_GET   = 'by_path_type_get';
-	const BY_PATH_TYPE_SET   = 'by_path_type_set';
-	const BY_PATH_TYPE_UNSET = 'by_path_type_unset';
-	const BY_PATH_TYPE_ADD   = 'by_path_type_add';
+	const BY_PATH_TYPE_GET   = 'get';
+	const BY_PATH_TYPE_SET   = 'set';
+	const BY_PATH_TYPE_UNSET = 'unset';
+	const BY_PATH_TYPE_ADD   = 'add';
 	
 	
 	public static function setDefaults( $params, $defaults = [], $mode = self::DEFAULTS_MODE_ADD )
 	{
+		$result = $params;
 		if( is_array( $params ) ) {
 			
 			switch( $mode ) {
 				
 				case self::DEFAULTS_MODE_ADD :
 					
-					return array_replace( $defaults, array_intersect_key( $params, $defaults ) );
+					$result = array_replace( $defaults, array_intersect_key( $params, $defaults ) );
+					
+					break;
 				
 				case self::DEFAULTS_MODE_FILTER :
 					
-					return array_intersect_key( $params, $defaults );
+					$result = array_intersect_key( $params, $defaults );
+					
+					break;
 				
 			}
 			
 		}
 		
-		return $params;
+		$errors = '';
+		foreach( $defaults as $key => $defaultValue ) {
+			if( $defaultValue === static::DEFAULTS_REQUIRED && ( !isset( $result[ $key ] ) || $result[ $key ] === static::DEFAULTS_REQUIRED ) ) {
+				$method = $method ?? debug_backtrace()[1]['function'];
+				$errors .= "Parameter $key is required to set for method $method.\r\n";
+			}
+		}
+		
+		if( !empty($errors) ){
+			throw new \yii\base\InvalidParamException( $errors );
+			
+		}
+		
+		return $result;
 		
 	}
 	
 	public static function setByPath( $path, &$array = [], $value )
 	{
 		return static::_byPath( $path, $array, self::BY_PATH_TYPE_SET, $value );
-	}
-	
-	public static function addByPath( $path, &$array = [], $value )
-	{
-		return static::_byPath( $path, $array, self::BY_PATH_TYPE_ADD, $value );
 	}
 	
 	protected static function &_byPath( $path, &$array = [], $opsType = self::BY_PATH_TYPE_GET, $value = null )
@@ -67,19 +80,24 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
 			}
 		}
 		
-		switch ( $opsType ) {
-		
-		    case self::BY_PATH_TYPE_SET:
-			    $temp = $value;
-		        break;
-		
-		    case self::BY_PATH_TYPE_ADD:
-			    $temp[] = $value;
-		        break;
-		
+		switch( $opsType ) {
+			
+			case self::BY_PATH_TYPE_SET:
+				$temp = $value;
+				break;
+			
+			case self::BY_PATH_TYPE_ADD:
+				$temp[] = $value;
+				break;
+			
 		}
 		
 		return $temp;
+	}
+	
+	public static function addByPath( $path, &$array = [], $value )
+	{
+		return static::_byPath( $path, $array, self::BY_PATH_TYPE_ADD, $value );
 	}
 	
 	public static function &getByPath( $path, &$array = [] )

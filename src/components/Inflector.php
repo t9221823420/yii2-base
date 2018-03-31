@@ -9,6 +9,7 @@
 namespace yozh\base\components;
 
 use Yii;
+use yii\base\Model;
 
 class Inflector extends \yii\helpers\Inflector
 {
@@ -35,8 +36,13 @@ class Inflector extends \yii\helpers\Inflector
 
         return $tablePrefix . $matches[ 'tableName' ];
     }
-
-    public static function array2html($value)
+	
+	public static function attributes2id( Model $model, Array $attributes = null )
+	{
+		return static::array2html( $model->getAttributes( $attributes ) );
+	}
+	
+	public static function array2html($value)
     {
         return htmlspecialchars( json_encode( $value ) );
     }

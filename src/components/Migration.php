@@ -302,6 +302,12 @@ abstract class Migration extends \yii\db\Migration
 		return $builder;
 	}
 	
+	public function boolean( $defaultValue = 0 )
+	{
+		return parent::boolean()->notNull()->defaultValue( $defaultValue ? 1 : 0 ) ;
+	}
+	
+	
 	public function set( $values = [] )
 	{
 		
