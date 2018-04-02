@@ -8,6 +8,7 @@ class AssetBundle extends \yii\web\AssetBundle
 	public $sourcePath = __DIR__ .'/../assets/';
 	
 	public $css = [
+		'css/yozh-base-bootstrap.css',
 		//'css/yozh-base.css',
 		//['css/yozh-base.print.css', 'media' => 'print'],
 	];
@@ -21,8 +22,8 @@ class AssetBundle extends \yii\web\AssetBundle
 	];
 	
 	public $depends = [
-		// 'yii\web\YiiAsset',
-		// 'yii\bootstrap\BootstrapAsset',
+		'yii\web\YiiAsset',
+		'yii\bootstrap\BootstrapAsset',
 	];
 
 	public function registerAssetFiles( $view )
