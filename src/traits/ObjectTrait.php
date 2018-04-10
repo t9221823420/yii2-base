@@ -8,8 +8,15 @@
 
 namespace yozh\base\traits;
 
-trait Utils
+trait ObjectTrait
 {
+	/**
+	 * Get list of prefixed class constants OR all if $prefix not set
+	 *
+	 * @param string $prefix
+	 * @return array
+	 * @throws \ReflectionException
+	 */
 	public static function getConstants( $prefix = '' )
 	{
 		$list = ( new \ReflectionClass( static::class ) )->getConstants();

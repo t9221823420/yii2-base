@@ -3,7 +3,7 @@ var Yozh = {
 };
 
 $(function () {
-
+    
 });
 
 function call_user_func(functionName, context /*, args */) {
