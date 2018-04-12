@@ -34,6 +34,7 @@ abstract class Bootstrap implements BootstrapInterface
 		], false )
 		;
 		
+		/*
 		$app->setModule( $moduleId, 'yozh\\' . $moduleId . '\Module' );
 		
 		if( ( new \ReflectionObject( $app ) )->getNamespaceName() == 'yii\console' ) {
@@ -55,6 +56,7 @@ abstract class Bootstrap implements BootstrapInterface
 				}
 			}
 		}
+		*/
 	}
 	
 }
