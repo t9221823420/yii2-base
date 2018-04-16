@@ -7,7 +7,7 @@
  */
 
 namespace yozh\base\components;
-
+use Yii;
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
 use yozh\base\components\ArrayHelper;
@@ -38,13 +38,20 @@ abstract class Migration extends \yii\db\Migration
 	public function safeUp( $params = [] )
 	{
 		$defaults = [
-			'table' => static::$_table,
-			'mode'  => self::ALTER_MODE_UPDATE,
+			'table'      => static::$_table,
+			'columns'    => static::getColumns(),
+			'indices'    => static::getIndices(),
+			'references' => static::getReferences(),
+			'mode'       => self::ALTER_MODE_UPDATE,
+			'options'    => null,
 		];
+		
 		
 		/**
 		 * @var $table string
 		 * @var $mode string
+		 * @var $indices array
+		 * @var $references array
 		 */
 		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
@@ -54,13 +61,11 @@ abstract class Migration extends \yii\db\Migration
 			$tableOptions = 'CHARACTER SET utf8 COLLATE utf8mb4_general_ci ENGINE=InnoDB';
 		}
 		
-		$refTable = $refColumns = $columns = null;
-		
 		$this->alterTable( $params );
 		
-		$tableSchema = \Yii::$app->db->schema->getTableSchema( $table, true );
+		//$tableSchema = \Yii::$app->db->schema->getTableSchema( $table, true );
 		
-		foreach( static::getIndices() as $index ) {
+		foreach( $indices as $index ) {
 			
 			/**
 			 * @var $refTable
@@ -90,14 +95,15 @@ abstract class Migration extends \yii\db\Migration
 			
 		}
 		
-		foreach( static::getReferences() as $ref ) {
+		foreach( $references as $ref ) {
 			
 			/**
 			 * @var $refTable
 			 * @var $refColumns
 			 * @var $columns
 			 */
-			extract( $ref, EXTR_IF_EXISTS );
+			
+			extract( $ref );
 			
 			$this->createForeignKey( $table, $columns, $refTable, $refColumns);
 			
@@ -160,7 +166,7 @@ abstract class Migration extends \yii\db\Migration
 		
 		foreach( $references as $ref ) {
 			
-			extract( $re, EXTR_IF_EXISTS );
+			extract( $ref, EXTR_IF_EXISTS );
 			
 			$this->dropForeignKey(
 				$this->_getFkName( $table, $columns ),
@@ -290,14 +296,14 @@ abstract class Migration extends \yii\db\Migration
 		], $references );
 	}
 	
-	public function createForeignKey( $table, $columns, $refTable, $refColumnss = 'id', $onDelete = 'CASCADE', $onUpdate = 'CASCADE' )
+	public function createForeignKey( $table, $columns, $refTable, $refColumns = 'id', $onDelete = 'CASCADE', $onUpdate = 'CASCADE' )
 	{
 		$idxName = "idx-$table-" . implode( '-', (array)$columns );
 		$fkName  = "fk-$table-" . implode( '-', (array)$columns );
 		
 		echo "\nCreating foreign key '$fkName' for:\n"
 			. "\ttable: '$table', columns: " . implode( ', ', (array)$columns ) . "\n"
-			. "\treference: '$refTable', columns: " . implode( ', ', (array)$columns ) . "\n"
+			. "\treference: '$refTable', columns: " . implode( ', ', (array)$refColumns ) . "\n"
 		;
 		
 		try {
@@ -335,7 +341,7 @@ abstract class Migration extends \yii\db\Migration
 			$table,
 			$columns,
 			$refTable,
-			$refColumnss,
+			$refColumns,
 			$onDelete,
 			$onUpdate
 		);
