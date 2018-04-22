@@ -10,4 +10,5 @@ namespace yozh\base\models;
 
 class BaseActiveQuery extends \yii\db\ActiveQuery
 {
+
 }

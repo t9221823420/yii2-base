@@ -262,11 +262,13 @@ abstract class Migration extends \yii\db\Migration
 	public function getIndices( $indices = [] )
 	{
 		$indices = ArrayHelper::merge( [
+			
 			/*
 			[
 				'column' => 'tree_id',
 			],
 			*/
+			
 		], $indices );
 		
 		$references = $this->getReferences();

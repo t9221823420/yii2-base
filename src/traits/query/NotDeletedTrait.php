@@ -6,7 +6,7 @@
  * Time: 7:05
  */
 
-namespace yozh\base\traits\ActiveQuery;
+namespace yozh\base\traits\query;
 
 use yozh\base\components\db\Schema;
 
