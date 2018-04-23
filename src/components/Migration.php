@@ -7,6 +7,7 @@
  */
 
 namespace yozh\base\components;
+
 use Yii;
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
@@ -14,9 +15,24 @@ use yozh\base\components\ArrayHelper;
 
 abstract class Migration extends \yii\db\Migration
 {
-	const ALTER_MODE_UPDATE     = 'alter_mode_update';
-	const ALTER_MODE_DROP_TABLE = 'alter_mode_drop_table';
-	const ALTER_MODE_IGNORE     = 'alter_mode_ignore';
+	//524288	262144	131072	65536	32768	16384
+	//const ALTER_MODE_DROP_TABLE = 2;
+	
+	const ALTER_MODE_COLUMN_UPDATE = 32;
+	const ALTER_MODE_COLUMN_DROP   = 64;
+	const ALTER_MODE_COLUMN_IGNORE = 128;
+	
+	const ALTER_MODE_INDEX_UPDATE = 256;
+	const ALTER_MODE_INDEX_DROP   = 512;
+	const ALTER_MODE_INDEX_IGNORE = 1024;
+	
+	const ALTER_MODE_FOREIGN_UPDATE = 2048;
+	const ALTER_MODE_FOREIGN_DROP   = 4056;
+	const ALTER_MODE_FOREIGN_IGNORE = 8192;
+	
+	const ALTER_MODE_UPDATE = 2336;
+	const ALTER_MODE_DROP   = 4632;
+	const ALTER_MODE_IGNORE = 9344;
 	
 	protected static $_tableSchema;
 	
@@ -45,7 +61,6 @@ abstract class Migration extends \yii\db\Migration
 			'mode'       => self::ALTER_MODE_UPDATE,
 			'options'    => null,
 		];
-		
 		
 		/**
 		 * @var $table string
@@ -105,7 +120,7 @@ abstract class Migration extends \yii\db\Migration
 			
 			extract( $ref );
 			
-			$this->createForeignKey( $table, $columns, $refTable, $refColumns);
+			$this->createForeignKey( $table, $columns, $refTable, $refColumns );
 			
 			/*
 			$fkName           = $this->_getFkName( $table, $column );
@@ -197,7 +212,7 @@ abstract class Migration extends \yii\db\Migration
 	/*
 	 * By default Indices are generating from References
 	 */
-
+	
 	public function alterTable( $params = [] )
 	{
 		
@@ -268,7 +283,7 @@ abstract class Migration extends \yii\db\Migration
 				'column' => 'tree_id',
 			],
 			*/
-			
+		
 		], $indices );
 		
 		$references = $this->getReferences();
@@ -305,16 +320,19 @@ abstract class Migration extends \yii\db\Migration
 		
 		echo "\nCreating foreign key '$fkName' for:\n"
 			. "\ttable: '$table', columns: " . implode( ', ', (array)$columns ) . "\n"
-			. "\treference: '$refTable', columns: " . implode( ', ', (array)$refColumns ) . "\n"
-		;
+			. "\treference: '$refTable', columns: " . implode( ', ', (array)$refColumns ) . "\n";
 		
 		try {
 			$this->dropForeignKey( $fkName, $table );
-		} catch( \Exception $e ) { echo "not exists\n"; }
+		} catch( \Exception $e ) {
+			echo "not exists\n";
+		}
 		
 		try {
 			$this->dropIndex( $idxName, $table );
-		} catch( \Exception $e ) { echo "not exists\n"; }
+		} catch( \Exception $e ) {
+			echo "not exists\n";
+		}
 		
 		$message = "Empty column '" . implode( ', ', (array)$columns ) . "' in table '$table' before creating?";
 		
@@ -328,7 +346,9 @@ abstract class Migration extends \yii\db\Migration
 				$table,
 				$columns
 			);
-		} catch( \Exception $e ) { echo "can not create index $idxName\n"; }
+		} catch( \Exception $e ) {
+			echo "can not create index $idxName\n";
+		}
 		
 		try {
 			$this->createIndex(
@@ -336,7 +356,9 @@ abstract class Migration extends \yii\db\Migration
 				$table,
 				$columns
 			);
-		} catch( \Exception $e ) { echo "can not create index $idxName\n"; }
+		} catch( \Exception $e ) {
+			echo "can not create index $idxName\n";
+		}
 		
 		$this->addForeignKey(
 			$fkName,
@@ -398,7 +420,7 @@ abstract class Migration extends \yii\db\Migration
 		if( $defaultCreate === true ) {
 			$defaultValue = ' CURRENT_TIMESTAMP';
 		}
-		else{
+		else {
 			$defaultValue = ' 0';
 		}
 		
@@ -413,20 +435,20 @@ abstract class Migration extends \yii\db\Migration
 	
 	protected function _getIdxName( $table, $columns )
 	{
-		return $this->_getConstrateName( 'idx', $table, $columns);
+		return $this->_getConstrateName( 'idx', $table, $columns );
 	}
 	
 	protected function _getUidxName( $table, $columns )
 	{
-		return $this->_getConstrateName( 'uidx', $table, $columns);
+		return $this->_getConstrateName( 'uidx', $table, $columns );
 	}
 	
 	protected function _getFkName( $table, $columns )
 	{
-		return $this->_getConstrateName( 'fk', $table, $columns);
+		return $this->_getConstrateName( 'fk', $table, $columns );
 	}
 	
-	protected function _getConstrateName( $prefix, $table, $columns)
+	protected function _getConstrateName( $prefix, $table, $columns )
 	{
 		return "$prefix-$table-" . implode( '-', (array)$columns );
 	}
