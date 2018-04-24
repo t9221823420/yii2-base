@@ -16,7 +16,7 @@ trait NotDeletedTrait
 	{
 		$table = $alias ?? call_user_func( [ $this->modelClass, 'tableName' ] );
 		
-		return $this->andWhere( [ $table . '.' . Schema::SERVICE_FIELD_DELETED_AT => 0, ] );
+		return $this->andWhere( [ $table . '.' . Schema::SERVICE_FIELD_DELETED_AT => null, ] );
 	}
 	
 }

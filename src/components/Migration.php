@@ -16,7 +16,7 @@ use yozh\base\components\ArrayHelper;
 abstract class Migration extends \yii\db\Migration
 {
 	//524288	262144	131072	65536	32768	16384
-	//const ALTER_MODE_DROP_TABLE = 2;
+	const ALTER_MODE_DROP_TABLE = 2;
 	
 	const ALTER_MODE_COLUMN_UPDATE = 32;
 	const ALTER_MODE_COLUMN_DROP   = 64;
@@ -385,7 +385,7 @@ abstract class Migration extends \yii\db\Migration
 	
 	public function deletedAt()
 	{
-		return $this->timestamp( null, null, false );
+		return $this->timestamp( null, false, false );
 	}
 	
 	public function updatedAt()
@@ -415,18 +415,21 @@ abstract class Migration extends \yii\db\Migration
 	
 	public function timestamp( $precision = null, $defaultCreate = true, $defaultUpdate = false )
 	{
-		$builder = parent::timestamp( $precision );
+		$type = Schema::TYPE_TIMESTAMP;
 		
 		if( $defaultCreate === true ) {
 			$defaultValue = ' CURRENT_TIMESTAMP';
 		}
 		else {
-			$defaultValue = ' 0';
+			$type .= ' NULL';
+			$defaultValue = 'NULL';
 		}
 		
 		if( $defaultUpdate ) {
 			$defaultValue .= ' ON UPDATE CURRENT_TIMESTAMP';
 		}
+		
+		$builder = $this->getDb()->getSchema()->createColumnSchemaBuilder( $type, $precision);
 		
 		$builder->defaultExpression( $defaultValue );
 		
