@@ -34,6 +34,11 @@ abstract class Migration extends \yii\db\Migration
 	const ALTER_MODE_DROP   = 4632;
 	const ALTER_MODE_IGNORE = 9344;
 	
+	const CONSTRAINTS_ACTION_RESTRICT  = 'RESTRICT';
+	const CONSTRAINTS_ACTION_NO_ACTION = 'NO ACTION';
+	const CONSTRAINTS_ACTION_CASCADE   = 'CASCADE';
+	const CONSTRAINTS_ACTION_SET_NULL  = 'SET NULL';
+	
 	protected static $_tableSchema;
 	
 	public static function getTableIndices( $table, $refresh = false )
@@ -116,11 +121,27 @@ abstract class Migration extends \yii\db\Migration
 			 * @var $refTable
 			 * @var $refColumns
 			 * @var $columns
+			 * @var $onDelete
+			 * @var $onUpdate
 			 */
 			
-			extract( $ref );
+			$defaults = [
+				'refTable'   => ArrayHelper::DEFAULTS_REQUIRED,
+				'refColumns' => ArrayHelper::DEFAULTS_REQUIRED,
+				'columns'    => ArrayHelper::DEFAULTS_REQUIRED,
+				'onDelete'   => self::CONSTRAINTS_ACTION_CASCADE,
+				'onUpdate'   => self::CONSTRAINTS_ACTION_CASCADE,
+			];
 			
-			$this->createForeignKey( $table, $columns, $refTable, $refColumns );
+			/**
+			 * @var $table string
+			 * @var $mode string
+			 * @var $indices array
+			 * @var $references array
+			 */
+			extract( ArrayHelper::setDefaults( $ref, $defaults ) );
+			
+			$this->createForeignKey( $table, $columns, $refTable, $refColumns, $onDelete, $onUpdate );
 			
 			/*
 			$fkName           = $this->_getFkName( $table, $column );
@@ -307,13 +328,21 @@ abstract class Migration extends \yii\db\Migration
 			[
 				'refTable'  => 'tree',
 				'refColumns' => 'id',
-				'column'    => 'tree_id',
+				'columns'    => 'tree_id',
+				'onDelete'    => self::CONSTRAINTS_ACTION_RESTRICT,
 			],
 			*/
 		], $references );
 	}
 	
-	public function createForeignKey( $table, $columns, $refTable, $refColumns = 'id', $onDelete = 'CASCADE', $onUpdate = 'CASCADE' )
+	public function createForeignKey(
+		$table,
+		$columns,
+		$refTable,
+		$refColumns = 'id',
+		$onDelete = self::CONSTRAINTS_ACTION_CASCADE,
+		$onUpdate = self::CONSTRAINTS_ACTION_CASCADE
+	)
 	{
 		$idxName = "idx-$table-" . implode( '-', (array)$columns );
 		$fkName  = "fk-$table-" . implode( '-', (array)$columns );
@@ -421,7 +450,7 @@ abstract class Migration extends \yii\db\Migration
 			$defaultValue = ' CURRENT_TIMESTAMP';
 		}
 		else {
-			$type .= ' NULL';
+			$type         .= ' NULL';
 			$defaultValue = 'NULL';
 		}
 		
@@ -429,7 +458,7 @@ abstract class Migration extends \yii\db\Migration
 			$defaultValue .= ' ON UPDATE CURRENT_TIMESTAMP';
 		}
 		
-		$builder = $this->getDb()->getSchema()->createColumnSchemaBuilder( $type, $precision);
+		$builder = $this->getDb()->getSchema()->createColumnSchemaBuilder( $type, $precision );
 		
 		$builder->defaultExpression( $defaultValue );
 		
