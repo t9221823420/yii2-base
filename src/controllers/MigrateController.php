@@ -21,7 +21,7 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		$newMigrations = $this->getNewMigrations();
 		
 		$migrations = null;
-		foreach( $newMigrations as $migration ) {
+		foreach( (array)$newMigrations as $migration ) {
 			if( strpos( $migration, $mask ) !== false ) {
 				$migrations[] = $migration;
 			}
