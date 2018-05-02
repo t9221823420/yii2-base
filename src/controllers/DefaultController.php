@@ -16,7 +16,7 @@ use yii\web\Response;
 
 class DefaultController extends Controller
 {
-	
+	/*
 	public function behaviors()
 	{
 		return [
@@ -31,6 +31,7 @@ class DefaultController extends Controller
 			],
 		];
 	}
+	*/
 	
 	/**
 	 * @param $primaryKey

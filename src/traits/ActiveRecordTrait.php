@@ -26,7 +26,7 @@ trait ActiveRecordTrait
 		$value = $value ?? $key;
 		
 		$query = static::find()
-		               ->select( [ $key, $value ] )
+		               ->select( [ $value, $key ] )
 		               ->andFilterWhere( $condition )
 		;
 		
