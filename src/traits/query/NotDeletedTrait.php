@@ -8,15 +8,21 @@
 
 namespace yozh\base\traits\query;
 
+use Yii;
 use yozh\base\components\db\Schema;
+use yozh\base\traits\ActiveQueryTrait;
 
 trait NotDeletedTrait
 {
+	use ActiveQueryTrait;
+	
 	public function notDeleted( $alias = null )
 	{
-		$table = $alias ?? call_user_func( [ $this->modelClass, 'tableName' ] );
+		list( $tableName, $alias ) = $this->getTableNameAndAlias();
 		
-		return $this->andWhere( [ $table . '.' . Schema::SERVICE_FIELD_DELETED_AT => null, ] );
+		$tableName = Yii::$app->db->schema->getRawTableName( $alias );
+		
+		return $this->andWhere( [ $alias . '.' . Schema::SERVICE_FIELD_DELETED_AT => null, ] );
 	}
 	
 }

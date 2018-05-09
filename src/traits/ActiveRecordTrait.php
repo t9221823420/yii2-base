@@ -8,6 +8,8 @@
 
 namespace yozh\base\traits;
 
+use Yii;
+use yii\db\ActiveRecord;
 use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
 trait ActiveRecordTrait
@@ -20,21 +22,37 @@ trait ActiveRecordTrait
 	 * @param bool $orderBy
 	 * @return array
 	 */
-	public static function getListQuery( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	public static function getListQuery( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null )
 	{
-		$key = $key ?? static::primaryKey()[0];
+		
+		if( !$alias && is_subclass_of( get_called_class(), ActiveRecord::class ) ) {
+			$table = Yii::$app->db->schema->getRawTableName( ( get_called_class() )::tableName() );
+		}
+		else if( $alias ) {
+			$table = $alias;
+		}
+		else {
+			$table = '';
+		}
+		
+		!$table ?: $table .= '.';
+		
+		$key   = $key ?? static::primaryKey()[0];
 		$value = $value ?? $key;
 		
 		$query = static::find()
-		               ->select( [ $value, $key ] )
+		               ->select( [
+			               $table . $value,
+			               $table . $key,
+		               ] )
 		               ->andFilterWhere( $condition )
 		;
 		
 		if( $orderBy === true ) { //
-			$query->orderBy( $value );
+			$query->orderBy( $table . $value );
 		}
 		else if( $orderBy !== false ) { //
-			$query->orderBy( $orderBy );
+			$query->orderBy( $table . $orderBy );
 		}
 		
 		if( $indexBy === true ) { //
@@ -45,6 +63,11 @@ trait ActiveRecordTrait
 		}
 		
 		return $query;
+	}
+	
+	public static function getList()
+	{
+		return static::_getList();
 	}
 	
 	public static function find()
@@ -59,4 +82,48 @@ trait ActiveRecordTrait
 		}
 		
 	}
+	
+	protected static function _getList( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	{
+		
+		$attributes = static::getTableSchema()->columns;
+		
+		if( !$value && isset( $attributes['name'] ) ) {
+			$value = 'name';
+		}
+		if( !$value && isset( $attributes['title'] ) ) {
+			$value = 'title';
+		}
+		
+		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
+	}
+	
+	/**
+	 * Returns attribute values.
+	 * @param array $names list of attributes whose value needs to be returned.
+	 * Defaults to null, meaning all attributes listed in [[attributes()]] will be returned.
+	 * If it is an array, only the attributes in the array will be returned.
+	 * @param array $except list of attributes whose value should NOT be returned.
+	 * @return array attribute values (name => value).
+	 */
+	public function getRawAttributes( $names = null, $except = [] )
+	{
+		$values = [];
+		
+		if( $names === null ) {
+			$names = $this->attributes();
+		}
+		
+		foreach( $names as $name ) {
+			$values[ $name ] = $this->getAttribute( $name );
+		}
+		
+		foreach( $except as $name ) {
+			unset( $values[ $name ] );
+		}
+		
+		return $values;
+	}
+	
+	
 }

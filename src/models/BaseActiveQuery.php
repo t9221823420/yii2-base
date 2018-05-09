@@ -8,7 +8,9 @@
 
 namespace yozh\base\models;
 
+use yozh\base\traits\ActiveQueryTrait;
+
 class BaseActiveQuery extends \yii\db\ActiveQuery
 {
-
+	use ActiveQueryTrait;
 }

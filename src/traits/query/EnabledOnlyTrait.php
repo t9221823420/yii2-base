@@ -9,14 +9,20 @@
 namespace yozh\base\traits\query;
 
 use yozh\base\components\db\Schema;
+use yozh\base\traits\ActiveQueryTrait;
 
 trait EnabledOnlyTrait
 {
+	
+	use ActiveQueryTrait;
+
 	public function enabledOnly( $alias = null )
 	{
-		$table = $alias ?? call_user_func( [ $this->modelClass, 'tableName' ] );
+		list( $tableName, $alias ) = $this->getTableNameAndAlias();
 		
-		return $this->andWhere( [ $table . '.' . Schema::SERVICE_FIELD_ENABLED => true, ] );
+		$tableName = Yii::$app->db->schema->getRawTableName( $alias );
+		
+		return $this->andWhere( [ $alias . '.' . Schema::SERVICE_FIELD_ENABLED => true, ] );
 	}
 	
 }
