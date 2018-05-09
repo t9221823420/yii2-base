@@ -13,16 +13,13 @@ use yozh\base\traits\ActiveQueryTrait;
 
 trait EnabledOnlyTrait
 {
-	
 	use ActiveQueryTrait;
 
 	public function enabledOnly( $alias = null )
 	{
-		list( $tableName, $alias ) = $this->getTableNameAndAlias();
+		$tableName = $this->getRawTableName( $alias );
 		
-		$tableName = Yii::$app->db->schema->getRawTableName( $alias );
-		
-		return $this->andWhere( [ $alias . '.' . Schema::SERVICE_FIELD_ENABLED => true, ] );
+		return $this->andWhere( [ $tableName . '.' . Schema::SERVICE_FIELD_ENABLED => true, ] );
 	}
 	
 }

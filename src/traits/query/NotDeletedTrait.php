@@ -18,11 +18,9 @@ trait NotDeletedTrait
 	
 	public function notDeleted( $alias = null )
 	{
-		list( $tableName, $alias ) = $this->getTableNameAndAlias();
+		$tableName = $this->getRawTableName( $alias );
 		
-		$tableName = Yii::$app->db->schema->getRawTableName( $alias );
-		
-		return $this->andWhere( [ $alias . '.' . Schema::SERVICE_FIELD_DELETED_AT => null, ] );
+		return $this->andWhere( [ $tableName . '.' . Schema::SERVICE_FIELD_DELETED_AT => null, ] );
 	}
 	
 }

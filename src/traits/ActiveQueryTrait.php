@@ -10,26 +10,39 @@ namespace yozh\base\traits;
 
 trait ActiveQueryTrait
 {
+	public function getRawTableName( $alias = null )
+	{
+		
+		if( !$alias ) {
+			list( $tableName, $alias ) = $this->getTableNameAndAlias();
+		}
+		
+		return \Yii::$app->db->schema->getRawTableName( $alias );
+		
+	}
+	
 	protected function getTableNameAndAlias()
 	{
-		if (empty($this->from)) {
+		if( empty( $this->from ) ) {
 			$tableName = $this->getPrimaryTableName();
-		} else {
+		}
+		else {
 			$tableName = '';
-			foreach ($this->from as $alias => $tableName) {
-				if (is_string($alias)) {
-					return [$tableName, $alias];
+			foreach( $this->from as $alias => $tableName ) {
+				if( is_string( $alias ) ) {
+					return [ $tableName, $alias ];
 				}
 				break;
 			}
 		}
 		
-		if (preg_match('/^(.*?)\s+({{\w+}}|\w+)$/', $tableName, $matches)) {
+		if( preg_match( '/^(.*?)\s+({{\w+}}|\w+)$/', $tableName, $matches ) ) {
 			$alias = $matches[2];
-		} else {
+		}
+		else {
 			$alias = $tableName;
 		}
 		
-		return [$tableName, $alias];
+		return [ $tableName, $alias ];
 	}
 }
