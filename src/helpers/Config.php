@@ -10,17 +10,21 @@ namespace yozh\base\helpers;
 
 class Config
 {
-	public static function setWithClosure( $variable, $value, $params )
+	public static function setWithClosure( $variable, $value = null, $params = [] )
 	{
 		/*
 		$params = func_get_args();
 		$value = array_shift($params);
 		*/
 		
-		if ( $variable instanceof Closure) {
+		if ( $variable instanceof \Closure ) {
 			return call_user_func_array( $variable, $params );
-		} else {
+		} 
+		elseif( $value ) {
 			return $value;
+		}
+		else{
+			return $variable;
 		}
 		
 	}
