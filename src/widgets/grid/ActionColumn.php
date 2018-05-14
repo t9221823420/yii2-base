@@ -6,6 +6,8 @@
  * Time: 15:59
  */
 
+namespace yozh\base\widgets\grid;
+
 class ActionColumn extends \kartik\grid\ActionColumn
 {
 	
