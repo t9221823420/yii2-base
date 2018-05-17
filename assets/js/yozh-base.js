@@ -1,37 +1,69 @@
-var Yozh = {
-    options: {},
+var yozh = {
+	
+	ACTION_BUTTON_TYPE_OK : 'ACTION_BUTTON_TYPE_OK',
+	ACTION_BUTTON_TYPE_CANCEL : 'ACTION_BUTTON_TYPE_CANCEL',
+
+	options: {},
 };
 
-$(function () {
-    
-});
+( function ( yozh, $, undefined ) {
+	
+	/*
+	//Private Property
+	var isHot = true;
 
-function call_user_func(functionName, context /*, args */) {
-    var args = Array.prototype.slice.call(arguments, 2);
-    var namespaces = functionName.split(".");
-    var func = namespaces.pop();
-    for (var i = 0; i < namespaces.length; i++) {
-        context = context[namespaces[i]];
-    }
-    return context[func].apply(context, args);
+	//Public Property
+	yozh.ingredient = "Bacon Strips";
+
+	//Public Method
+	yozh.fry = function() {
+		var oliveOil;
+
+		addItem( "\t\n Butter \n\t" );
+		addItem( oliveOil );
+		console.log( "Frying " + yozh.ingredient );
+	};
+
+	//Private Method
+	function addItem( item ) {
+		if ( item !== undefined ) {
+			console.log( "Adding " + $.trim(item) );
+		}
+	}
+	*/
+	
+}( window.yozh = window.yozh || {}, jQuery ) );
+
+$( function () {
+
+} );
+
+function call_user_func( functionName, context /*, args */ ) {
+	var args = Array.prototype.slice.call( arguments, 2 );
+	var namespaces = functionName.split( "." );
+	var func = namespaces.pop();
+	for ( var i = 0; i < namespaces.length; i++ ) {
+		context = context[ namespaces[ i ] ];
+	}
+	return context[ func ].apply( context, args );
 }
 
-function strtr(s, p, r) {
-
-    //var s = this.toString();
-
-    return !!s && {
-        2: function () {
-            for (var i in p) {
-                s = strtr(s, i, p[i]);
-            }
-            return s;
-        },
-        3: function () {
-            return s.replace(RegExp(p, 'g'), r);
-        },
-        0: function () {
-            return;
-        }
-    }[arguments.length]();
+function strtr( s, p, r ) {
+	
+	//var s = this.toString();
+	
+	return !!s && {
+		2 : function () {
+			for ( var i in p ) {
+				s = strtr( s, i, p[ i ] );
+			}
+			return s;
+		},
+		3 : function () {
+			return s.replace( RegExp( p, 'g' ), r );
+		},
+		0 : function () {
+			return;
+		}
+	}[ arguments.length ]();
 }
