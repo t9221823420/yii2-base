@@ -1,9 +1,5 @@
 var yozh = {
-	
-	ACTION_BUTTON_TYPE_OK : 'ACTION_BUTTON_TYPE_OK',
-	ACTION_BUTTON_TYPE_CANCEL : 'ACTION_BUTTON_TYPE_CANCEL',
-
-	options: {},
+	options : {},
 };
 
 ( function ( yozh, $, undefined ) {
@@ -34,19 +30,22 @@ var yozh = {
 	
 }( window.yozh = window.yozh || {}, jQuery ) );
 
-$( function () {
 
-} );
-
-function call_user_func( functionName, context /*, args */ ) {
+function call_user_func( _functionName, _context /*, args */ ) {
+	
+	_context = _context || window;
+	
 	var args = Array.prototype.slice.call( arguments, 2 );
-	var namespaces = functionName.split( "." );
+	var namespaces = _functionName.split( "." );
 	var func = namespaces.pop();
+	
 	for ( var i = 0; i < namespaces.length; i++ ) {
-		context = context[ namespaces[ i ] ];
+		_context = _context[ namespaces[ i ] ];
 	}
-	return context[ func ].apply( context, args );
+	
+	return _context[ func ].apply( _context, args );
 }
+
 
 function strtr( s, p, r ) {
 	
