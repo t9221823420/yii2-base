@@ -83,7 +83,7 @@ class DefaultController extends Controller
 		return $this->_findModel( $id );
 	}
 	
-	protected function _responseJSON( $data_type, $value = null )
+	protected function _responseJson( $data_type, $value = null )
 	{
 		Yii::$app->response->format = Response::FORMAT_JSON;
 		
