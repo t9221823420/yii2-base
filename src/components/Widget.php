@@ -10,21 +10,5 @@ namespace yozh\base\components;
 
 class Widget extends \yii\base\Widget
 {
-	/*
-	public function init()
-	{
-		parent::init();
-		ob_start();
-	}
-	
-	public function run()
-	{
-		$this->render( 'view' );
-		$content = ob_get_clean();
-		
-		return Html::encode( $content );
-	}
-	*/
-	
 
 }

@@ -6,12 +6,12 @@
  * Time: 17:24
  */
 
-namespace yozh\base\components;
+namespace yozh\base\components\db;
 
 use Yii;
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
-use yozh\base\components\ArrayHelper;
+use yozh\base\components\utils\ArrayHelper;
 
 abstract class Migration extends \yii\db\Migration
 {

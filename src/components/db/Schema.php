@@ -9,7 +9,7 @@
 namespace yozh\base\components\db;
 
 use yii\base\BaseObject;
-use yozh\base\components\Migration;
+use yozh\base\components\db\Migration;
 
 /**
  * Class Schema

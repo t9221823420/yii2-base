@@ -6,7 +6,7 @@
  * Time: 9:40
  */
 
-namespace yozh\base\components;
+namespace yozh\base\components\utils;
 
 class ArrayHelper extends \yii\helpers\ArrayHelper
 {
