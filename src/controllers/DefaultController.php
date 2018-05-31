@@ -16,6 +16,8 @@ use yii\web\Response;
 
 class DefaultController extends Controller
 {
+	public $_viewPath;
+	
 	/*
 	public function behaviors()
 	{
@@ -40,17 +42,10 @@ class DefaultController extends Controller
 	 */
 	protected function _findModel( $condition, $modelClass = null, $one = true )
 	{
-		if( method_exists( get_called_class(), 'defaultModel' ) ) { //
+		if( !(is_string( $modelClass ) && class_exists( $modelClass )) ) {
 			
-			/** @var ActiveRecord $defaultModel */
-			$modelClass = static::defaultModel();
+			throw new \yii\base\InvalidParamException( 'It\'s have to be set a defaultModelClass() or $modelClass' );
 			
-		}
-		else if( is_string( $modelClass ) && class_exists( $modelClass ) ) {
-			// something todo
-		}
-		else {
-			throw new \yii\base\InvalidParamException( 'It\'s have to be set a defaultModel() or $modelClass' );
 		}
 		
 		if( $one && ( $Model = $modelClass::findOne( $condition ) ) !== null ) {
@@ -94,6 +89,30 @@ class DefaultController extends Controller
 			return [ 'result' => [ $data_type  => $value] ];
 		}
 		
+	}
+	
+	public function getViewPath()
+	{
+		if ($this->_viewPath === null) {
+			
+			$path = parent::getViewPath();
+			
+			if( !is_dir( $path ) && $parentPath = $this->module->getParentPath( 'views' . DIRECTORY_SEPARATOR . $this->id )) {
+				
+				$path = $parentPath;
+				
+			}
+			
+			$this->_viewPath = $path;
+			
+		}
+		
+		return $this->_viewPath;
+	}
+	
+	public function getParentViewPath()
+	{
+	
 	}
 	
 }

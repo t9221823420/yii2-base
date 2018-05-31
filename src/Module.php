@@ -4,10 +4,21 @@ namespace yozh\base;
 
 use Yii;
 use yii\base\BootstrapInterface;
-use \yii\base\Module as BaseModule;
+use yii\base\Module as BaseModule;
+use yii\base\ViewContextInterface;
+use yozh\base\traits\ViewContextTrait;
 
-abstract class Module extends BaseModule implements BootstrapInterface
+abstract class Module extends BaseModule implements BootstrapInterface, ViewContextInterface
 {
+	use ViewContextTrait;
+	
+	public $_viewPath;
+	
+	public static function t( $category, $message, $params = [], $language = null )
+	{
+		return Yii::t( $category, $message, $params, $language );
+	}
+	
 	public function createController( $route )
 	{
 		
@@ -37,9 +48,5 @@ abstract class Module extends BaseModule implements BootstrapInterface
 		}
 	}
 	
-	
-	public static function t( $category, $message, $params = [], $language = null )
-	{
-		return Yii::t( $category, $message, $params, $language );
-	}
+
 }

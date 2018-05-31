@@ -65,9 +65,9 @@ trait ActiveRecordTrait
 		return $query;
 	}
 	
-	public static function getList()
+	public static function getList( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
 	{
-		return static::_getList();
+		return static::_getList( $condition, $key, $value, $indexBy, $orderBy );
 	}
 	
 	public static function find()

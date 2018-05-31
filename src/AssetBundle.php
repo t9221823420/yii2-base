@@ -9,6 +9,7 @@ class AssetBundle extends \yii\web\AssetBundle
 	
 	public $css = [
 		'css/yozh-base-bootstrap.css',
+		'css/yozh-base-yii.css',
 		//'css/yozh-base.css',
 		//['css/yozh-base.print.css', 'media' => 'print'],
 	];
