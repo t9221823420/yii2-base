@@ -129,7 +129,7 @@ abstract class Migration extends \yii\db\Migration
 				'refTable'   => ArrayHelper::DEFAULTS_REQUIRED,
 				'refColumns' => ArrayHelper::DEFAULTS_REQUIRED,
 				'columns'    => ArrayHelper::DEFAULTS_REQUIRED,
-				'onDelete'   => self::CONSTRAINTS_ACTION_CASCADE,
+				'onDelete'   => self::CONSTRAINTS_ACTION_RESTRICT,
 				'onUpdate'   => self::CONSTRAINTS_ACTION_CASCADE,
 			];
 			
@@ -340,7 +340,7 @@ abstract class Migration extends \yii\db\Migration
 		$columns,
 		$refTable,
 		$refColumns = 'id',
-		$onDelete = self::CONSTRAINTS_ACTION_CASCADE,
+		$onDelete = self::CONSTRAINTS_ACTION_RESTRICT,
 		$onUpdate = self::CONSTRAINTS_ACTION_CASCADE
 	)
 	{

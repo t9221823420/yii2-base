@@ -8,7 +8,7 @@
 
 namespace yozh\base\traits\actions;
 
-use yozh\base\intarfaces\ActiveRecordInterface;
+use yozh\base\interfaces\ActiveRecordInterface;
 use yozh\base\models\BaseModel as ActiveRecord;
 use yozh\crud\interfaces\CrudInterface;
 

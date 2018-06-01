@@ -10,7 +10,7 @@ namespace yozh\base\widgets;
 
 use yii\data\Pagination;
 use yii\jui\Widget;
-use yii\bootstrap4\Html;
+use yii\helpers\Html;
 use yozh\base\components\utils\ArrayHelper;
 
 class LimitPager extends Widget

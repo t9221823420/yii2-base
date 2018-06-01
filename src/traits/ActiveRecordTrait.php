@@ -14,6 +14,12 @@ use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
 trait ActiveRecordTrait
 {
+	
+	public static function getRawTableName()
+	{
+		return Yii::$app->db->schema->getRawTableName( static::tableName() );
+	}
+	
 	/**
 	 * Return records as Array id => column for dropdowns
 	 *
@@ -125,5 +131,8 @@ trait ActiveRecordTrait
 		return $values;
 	}
 	
-	
+	public static function getShemaReferences()
+	{
+		return static::getTableSchema()->foreignKeys;
+	}
 }

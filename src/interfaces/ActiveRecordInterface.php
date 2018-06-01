@@ -6,11 +6,13 @@
  * Time: 12:34
  */
 
-namespace yozh\base\intarfaces;
+namespace yozh\base\interfaces;
 
 interface ActiveRecordInterface extends \yii\db\ActiveRecordInterface
 {
 	public static function getList();
 	
 	public static function getListQuery( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null );
+	
+	public static function getShemaReferences();
 }
