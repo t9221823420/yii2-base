@@ -22,7 +22,7 @@ trait ObjectTrait
 		$list = ( new \ReflectionClass( static::class ) )->getConstants();
 		
 		foreach( $list as $key => $const ) {
-			if( strpos( $key, $prefix ) === false ) {
+			if( strpos( $key, $prefix ) !== 0 ) {
 				unset( $list[ $key ] );
 			}
 		}
