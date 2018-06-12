@@ -46,7 +46,6 @@ function call_user_func( _functionName, _context /*, args */ ) {
 	return _context[ func ].apply( _context, args );
 }
 
-
 function strtr( s, p, r ) {
 	
 	//var s = this.toString();
