@@ -1,3 +1,5 @@
-.grid-view td.actions{
-    text-align: right;
+.grid-view td.actions,
+.grid-view th.actions
+{
+    text-align: center;
 }

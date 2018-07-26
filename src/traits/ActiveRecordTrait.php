@@ -28,7 +28,7 @@ trait ActiveRecordTrait
 	 * @param bool $orderBy
 	 * @return array
 	 */
-	public static function getListQuery( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null )
+	public static function getListQuery( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null )
 	{
 		
 		if( !$alias && is_subclass_of( get_called_class(), ActiveRecord::class ) ) {
@@ -51,7 +51,7 @@ trait ActiveRecordTrait
 			               $table . $value,
 			               $table . $key,
 		               ] )
-		               ->andFilterWhere( $condition )
+		               ->andFilterWhere( $condition ?? [] )
 		;
 		
 		if( $orderBy === true ) { //
@@ -71,7 +71,7 @@ trait ActiveRecordTrait
 		return $query;
 	}
 	
-	public static function getList( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
 	{
 		return static::_getList( $condition, $key, $value, $indexBy, $orderBy );
 	}
@@ -89,7 +89,12 @@ trait ActiveRecordTrait
 		
 	}
 	
-	protected static function _getList( $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	public static function getShemaReferences()
+	{
+		return static::getTableSchema()->foreignKeys;
+	}
+	
+	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
 	{
 		
 		$attributes = static::getTableSchema()->columns;
@@ -105,34 +110,69 @@ trait ActiveRecordTrait
 	}
 	
 	/**
+	 * Returns the list of all attribute names of the model.
+	 * The default implementation will return all column names of the table associated with this AR class.
+	 * @return array list of attribute names.
+	 */
+	public function attributes( ?array $only = null, ?array $except = null, ?bool $schemaOnly = false )
+	{
+		$names = array_keys( static::getTableSchema()->columns );
+		
+		if( !$schemaOnly ) {
+			
+			$class = new \ReflectionClass( $this );
+			
+			foreach( $class->getProperties( \ReflectionProperty::IS_PUBLIC ) as $property ) {
+				if( !$property->isStatic() ) {
+					$names[] = $property->getName();
+				}
+			}
+			
+		}
+		
+		$names = array_unique( $names );
+		
+		if( $only ) {
+			$names = array_intersect( $names, $only );
+		}
+		
+		if( $except ) {
+			$names = array_diff( $names, $except );
+		}
+		
+		return $names;
+	}
+	
+	/**
 	 * Returns attribute values.
-	 * @param array $names list of attributes whose value needs to be returned.
+	 * @param array $only list of attributes whose value needs to be returned.
 	 * Defaults to null, meaning all attributes listed in [[attributes()]] will be returned.
 	 * If it is an array, only the attributes in the array will be returned.
 	 * @param array $except list of attributes whose value should NOT be returned.
 	 * @return array attribute values (name => value).
 	 */
-	public function getRawAttributes( $names = null, $except = [] )
+	public function getRawAttributes( ?array $only = null, ?array $except = [], ?bool $schemaOnly = false )
 	{
 		$values = [];
 		
-		if( $names === null ) {
-			$names = $this->attributes();
+		if( $only === null ) {
+			$only = $this->attributes( $only, $except, $schemaOnly );
 		}
 		
-		foreach( $names as $name ) {
+		foreach( $only as $name ) {
 			$values[ $name ] = $this->getAttribute( $name );
 		}
 		
+		if( $except ) {
+			$values = array_diff_key( $values, array_flip( $except ) );
+		}
+		
+		/*
 		foreach( $except as $name ) {
 			unset( $values[ $name ] );
 		}
+		*/
 		
 		return $values;
-	}
-	
-	public static function getShemaReferences()
-	{
-		return static::getTableSchema()->foreignKeys;
 	}
 }

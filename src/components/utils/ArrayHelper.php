@@ -29,23 +29,22 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
 				
 				case self::DEFAULTS_MODE_ADD :
 					
-					$result = array_replace( $defaults, array_intersect_key( $params, $defaults ) );
+					$result = array_replace_recursive( $defaults, $params );
 					
 					break;
 				
 				case self::DEFAULTS_MODE_FILTER :
 					
-					$result = array_intersect_key( $params, $defaults );
+					$result = array_replace_recursive( $defaults, array_intersect_key( $params, $defaults ) );
 					
 					break;
-				
 			}
 			
 		}
 		
 		$errors = '';
 		foreach( $defaults as $key => $defaultValue ) {
-			if( $defaultValue === static::DEFAULTS_REQUIRED && ( !isset( $result[ $key ] ) || $result[ $key ] === static::DEFAULTS_REQUIRED ) ) {
+			if( $defaultValue === static::DEFAULTS_REQUIRED && ( !array_key_exists( $key, $result ) || $result[ $key ] === static::DEFAULTS_REQUIRED ) ) {
 				$method = $method ?? debug_backtrace()[1]['function'];
 				$errors .= "Parameter $key is required to set for method $method.\r\n";
 			}

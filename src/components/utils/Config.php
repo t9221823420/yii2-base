@@ -6,7 +6,7 @@
  * Time: 23:40
  */
 
-namespace yozh\base\helpers;
+namespace yozh\base\components\utils;
 
 class Config
 {

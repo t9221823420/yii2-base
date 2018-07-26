@@ -37,9 +37,9 @@ class Inflector extends \yii\helpers\Inflector
         return $tablePrefix . $matches[ 'tableName' ];
     }
 	
-	public static function attributes2id( Model $model, Array $attributes = null )
+	public static function attributes2id( Model $Model, Array $attributes = null )
 	{
-		return static::array2html( $model->getAttributes( $attributes ) );
+		return static::array2html( $Model->getAttributes( $attributes ) );
 	}
 	
 	public static function array2html($value)
