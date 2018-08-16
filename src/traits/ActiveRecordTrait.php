@@ -9,6 +9,7 @@
 namespace yozh\base\traits;
 
 use Yii;
+use yii\base\Module;
 use yii\db\ActiveRecord;
 use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
@@ -19,6 +20,7 @@ trait ActiveRecordTrait
 	{
 		return Yii::$app->db->schema->getRawTableName( static::tableName() );
 	}
+	
 	
 	/**
 	 * Return records as Array id => column for dropdowns
@@ -92,6 +94,53 @@ trait ActiveRecordTrait
 	public static function getShemaReferences()
 	{
 		return static::getTableSchema()->foreignKeys;
+	}
+	
+	public static function getRoute( $route = 'index' )
+	{
+		$namespace       = ( new\ReflectionClass( static::class ) )->getNamespaceName();
+		$modelClass      = ( new\ReflectionClass( static::class ) )->getShortName();
+		$moduleNamespace = preg_replace( '/\\\\models/', '', $namespace );
+		
+		$moduleId = null;
+		
+		foreach( Yii::$app->getModules() as $key => $module ) {
+			if( $module instanceof Module && ( new\ReflectionObject( $module ) )->getNamespaceName() == $moduleNamespace ) {
+				
+				$moduleId = $key;
+				
+				//$defaultRoute = $module->defaultRoute;
+				
+				break;
+			}
+			else if( ( $module['class'] ?? false ) && strpos( $module['class'], $moduleNamespace . '\\' ) === 0 ) {
+				
+				$moduleId = $key;
+				
+				//$defaultRoute = $module['defaultRoute'] ?? 'default';
+				
+				break;
+			}
+		}
+		
+		if ( $moduleId && class_exists( "$moduleNamespace\\controllers\\{$modelClass}Controller" ) ){
+			$route = mb_strtolower( $modelClass ) . '/' . $route;
+		}
+		elseif( $moduleId && class_exists( "$moduleNamespace\\controllers\\DefaultController" ) ){
+			$route = 'default/' . $route;
+		}
+		else{
+			$moduleId = null;
+		}
+		
+		if( $moduleId ) {
+			
+			return $moduleId . '/' . $route;
+		}
+		else {
+			return $route;
+		}
+		
 	}
 	
 	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )

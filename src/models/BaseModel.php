@@ -11,4 +11,5 @@ use yozh\base\traits\ObjectTrait;
 class BaseModel extends \yii\db\ActiveRecord implements ActiveRecordInterface
 {
 	use ObjectTrait, ActiveRecordTrait;
+	
 }

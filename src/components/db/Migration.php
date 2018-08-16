@@ -41,17 +41,17 @@ abstract class Migration extends \yii\db\Migration
 	
 	protected static $_tableSchema;
 	
-	public static function getTableIndices( $table, $refresh = false )
+	public static function getTableIndices( $tableName, $refresh = false )
 	{
 		static $data = [];
 		
-		if( isset( $data['$table'] ) ) {
-			return $data['$table'];
+		if( isset( $data['$tableName'] ) ) {
+			return $data['$tableName'];
 		}
-		$indexes = \Yii::$app->db->schema->getTableIndexes( $table, $refresh );
+		$indexes = \Yii::$app->db->schema->getTableIndexes( $tableName, $refresh );
 		
 		foreach( $indexes as $index ) {
-			$data[ $table ][ $index->name ] = $index;
+			$data[ $tableName ][ $index->name ] = $index;
 		}
 		
 	}
@@ -59,7 +59,7 @@ abstract class Migration extends \yii\db\Migration
 	public function safeUp( $params = [] )
 	{
 		$defaults = [
-			'table'      => static::$_table,
+			'tableName'  => static::$_table,
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
@@ -68,12 +68,14 @@ abstract class Migration extends \yii\db\Migration
 		];
 		
 		/**
-		 * @var $table string
+		 * @var $tableName string
 		 * @var $mode string
 		 * @var $indices array
 		 * @var $references array
 		 */
 		extract( ArrayHelper::setDefaults( $params, $defaults ) );
+		
+		$tableName = Yii::$app->db->schema->getRawTableName( $tableName );
 		
 		$tableOptions = null;
 		if( $this->db->driverName === 'mysql' ) {
@@ -83,7 +85,7 @@ abstract class Migration extends \yii\db\Migration
 		
 		$this->alterTable( $params );
 		
-		//$tableSchema = \Yii::$app->db->schema->getTableSchema( $table, true );
+		//$tableSchema = \Yii::$app->db->schema->getTableSchema( $tableName, true );
 		
 		foreach( $indices as $index ) {
 			
@@ -94,8 +96,8 @@ abstract class Migration extends \yii\db\Migration
 			 */
 			extract( $index, EXTR_IF_EXISTS );
 			
-			$idxName      = $this->_getIdxName( $table, $columns );
-			$tableIndices = static::getTableIndices( $table );
+			$idxName      = $this->_getIdxName( $tableName, $columns );
+			$tableIndices = static::getTableIndices( $tableName );
 			
 			if( isset( $tableIndices[ $idxName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
 				continue;
@@ -103,13 +105,13 @@ abstract class Migration extends \yii\db\Migration
 			else if( isset( $tableIndices[ $idxName ] ) && $mode == self::ALTER_MODE_UPDATE ) {
 				$this->dropIndex(
 					$idxName,
-					$table
+					$tableName
 				);
 			}
 			
 			$this->createIndex(
 				$idxName,
-				$table,
+				$tableName,
 				$columns
 			);
 			
@@ -134,18 +136,18 @@ abstract class Migration extends \yii\db\Migration
 			];
 			
 			/**
-			 * @var $table string
+			 * @var $tableName string
 			 * @var $mode string
 			 * @var $indices array
 			 * @var $references array
 			 */
 			extract( ArrayHelper::setDefaults( $ref, $defaults ) );
 			
-			$this->createForeignKey( $table, $columns, $refTable, $refColumns, $onDelete, $onUpdate );
+			$this->createForeignKey( $tableName, $columns, $refTable, $refColumns, $onDelete, $onUpdate );
 			
 			/*
-			$fkName           = $this->_getFkName( $table, $column );
-			$idxName          = $this->_getIdxName( $table, $column );
+			$fkName           = $this->_getFkName( $tableName, $column );
+			$idxName          = $this->_getIdxName( $tableName, $column );
 			$tableForeignKeys = $tableSchema->foreignKeys;
 			
 			if( isset( $tableForeignKeys[ $fkName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
@@ -155,24 +157,24 @@ abstract class Migration extends \yii\db\Migration
 				
 				$this->dropForeignKey(
 					$fkName,
-					$table
+					$tableName
 				);
 				
 				$this->dropIndex(
 					$idxName,
-					$table
+					$tableName
 				);
 			}
 			
 			$this->createIndex(
 				$idxName,
-				$table,
+				$tableName,
 				$column
 			);
 			
 			$this->addForeignKey(
 				$fkName,
-				$table,
+				$tableName,
 				$column,
 				$refTable,
 				$refColumns,
@@ -192,7 +194,7 @@ abstract class Migration extends \yii\db\Migration
 		];
 		
 		/**
-		 * @var $table string
+		 * @var $tableName string
 		 * @var $indices array
 		 * @var $references array
 		 */
@@ -205,13 +207,13 @@ abstract class Migration extends \yii\db\Migration
 			extract( $ref, EXTR_IF_EXISTS );
 			
 			$this->dropForeignKey(
-				$this->_getFkName( $table, $columns ),
-				$table
+				$this->_getFkName( $tableName, $columns ),
+				$tableName
 			);
 			
 			$this->dropIndex(
-				$this->_getIdxName( $table, $columns ),
-				$table
+				$this->_getIdxName( $tableName, $columns ),
+				$tableName
 			);
 			
 		}
@@ -221,13 +223,13 @@ abstract class Migration extends \yii\db\Migration
 			extract( $index, EXTR_IF_EXISTS );
 			
 			$this->dropIndex(
-				$this->_getIdxName( $table, $columns ),
-				$table
+				$this->_getIdxName( $tableName, $columns ),
+				$tableName
 			);
 			
 		}
 		
-		$this->dropTable( $table );
+		$this->dropTable( $tableName );
 	}
 	
 	/*
@@ -238,7 +240,7 @@ abstract class Migration extends \yii\db\Migration
 	{
 		
 		/**
-		 * @var $table string
+		 * @var $tableName string
 		 * @var $columns array
 		 * @var $indices array
 		 * @var $references array
@@ -246,7 +248,7 @@ abstract class Migration extends \yii\db\Migration
 		 * @var $options array
 		 */
 		$defaults = [
-			'table'      => static::$_table,
+			'tableName'      => static::$_table,
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
@@ -256,10 +258,10 @@ abstract class Migration extends \yii\db\Migration
 		
 		extract( ArrayHelper::setDefaults( $params, $defaults ) );
 		
-		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $table ) ) {
+		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $tableName ) ) {
 			
 			if( $mode == self::ALTER_MODE_DROP_TABLE ) {
-				$this->_safeDown( $table, $indices, $references );
+				$this->_safeDown( $tableName, $indices, $references );
 			}
 			
 			$pk = $tableSchema->primaryKey;
@@ -268,11 +270,11 @@ abstract class Migration extends \yii\db\Migration
 				
 				if( isset( $tableSchema->columns[ $key ] ) ) {
 					if( $mode == self::ALTER_MODE_UPDATE && !in_array( $key, $pk ) ) { //
-						$this->alterColumn( $table, $key, $column );
+						$this->alterColumn( $tableName, $key, $column );
 					}
 				}
 				else {
-					$this->addColumn( $table, $key, $column );
+					$this->addColumn( $tableName, $key, $column );
 				}
 			}
 			
@@ -283,7 +285,7 @@ abstract class Migration extends \yii\db\Migration
 				$column->after( null );
 			}
 			
-			parent::createTable( $table, $columns, $options );
+			parent::createTable( $tableName, $columns, $options );
 		}
 		
 	}
@@ -336,7 +338,7 @@ abstract class Migration extends \yii\db\Migration
 	}
 	
 	public function createForeignKey(
-		$table,
+		$tableName,
 		$columns,
 		$refTable,
 		$refColumns = 'id',
@@ -344,35 +346,35 @@ abstract class Migration extends \yii\db\Migration
 		$onUpdate = self::CONSTRAINTS_ACTION_CASCADE
 	)
 	{
-		$idxName = "idx-$table-" . implode( '-', (array)$columns );
-		$fkName  = "fk-$table-" . implode( '-', (array)$columns );
+		$idxName = "idx-$tableName-" . implode( '-', (array)$columns );
+		$fkName  = "fk-$tableName-" . implode( '-', (array)$columns );
 		
 		echo "\nCreating foreign key '$fkName' for:\n"
-			. "\ttable: '$table', columns: " . implode( ', ', (array)$columns ) . "\n"
+			. "\ttable: '$tableName', columns: " . implode( ', ', (array)$columns ) . "\n"
 			. "\treference: '$refTable', columns: " . implode( ', ', (array)$refColumns ) . "\n";
 		
 		try {
-			$this->dropForeignKey( $fkName, $table );
+			$this->dropForeignKey( $fkName, $tableName );
 		} catch( \Exception $e ) {
 			echo "not exists\n";
 		}
 		
 		try {
-			$this->dropIndex( $idxName, $table );
+			$this->dropIndex( $idxName, $tableName );
 		} catch( \Exception $e ) {
 			echo "not exists\n";
 		}
 		
-		$message = "Empty column '" . implode( ', ', (array)$columns ) . "' in table '$table' before creating?";
+		$message = "Empty column '" . implode( ', ', (array)$columns ) . "' in table '$tableName' before creating?";
 		
 		if( Yii::$app->controller->confirm( $message ) ) {
-			$this->update( $table, array_fill_keys( (array)$columns, null ) );
+			$this->update( $tableName, array_fill_keys( (array)$columns, null ) );
 		}
 		
 		try {
 			$this->createIndex(
 				$idxName,
-				$table,
+				$tableName,
 				$columns
 			);
 		} catch( \Exception $e ) {
@@ -382,7 +384,7 @@ abstract class Migration extends \yii\db\Migration
 		try {
 			$this->createIndex(
 				$idxName,
-				$table,
+				$tableName,
 				$columns
 			);
 		} catch( \Exception $e ) {
@@ -391,7 +393,7 @@ abstract class Migration extends \yii\db\Migration
 		
 		$this->addForeignKey(
 			$fkName,
-			$table,
+			$tableName,
 			$columns,
 			$refTable,
 			$refColumns,
@@ -428,7 +430,7 @@ abstract class Migration extends \yii\db\Migration
 	 */
 	public function mediumText()
 	{
-		return $this->getDb()->getSchema()->createColumnSchemaBuilder('mediumtext');
+		return $this->getDb()->getSchema()->createColumnSchemaBuilder( 'mediumtext' );
 	}
 	
 	/**
@@ -437,7 +439,7 @@ abstract class Migration extends \yii\db\Migration
 	 */
 	public function longText()
 	{
-		return $this->getDb()->getSchema()->createColumnSchemaBuilder('longtext');
+		return $this->getDb()->getSchema()->createColumnSchemaBuilder( 'longtext' );
 	}
 	
 	/**
@@ -446,7 +448,7 @@ abstract class Migration extends \yii\db\Migration
 	 */
 	public function tinyText()
 	{
-		return $this->getDb()->getSchema()->createColumnSchemaBuilder('tinytext');
+		return $this->getDb()->getSchema()->createColumnSchemaBuilder( 'tinytext' );
 	}
 	
 	public function enum( $values = [] )
@@ -492,24 +494,24 @@ abstract class Migration extends \yii\db\Migration
 		return $builder;
 	}
 	
-	protected function _getIdxName( $table, $columns )
+	protected function _getIdxName( $tableName, $columns )
 	{
-		return $this->_getConstrateName( 'idx', $table, $columns );
+		return $this->_getConstrateName( 'idx', $tableName, $columns );
 	}
 	
-	protected function _getUidxName( $table, $columns )
+	protected function _getUidxName( $tableName, $columns )
 	{
-		return $this->_getConstrateName( 'uidx', $table, $columns );
+		return $this->_getConstrateName( 'uidx', $tableName, $columns );
 	}
 	
-	protected function _getFkName( $table, $columns )
+	protected function _getFkName( $tableName, $columns )
 	{
-		return $this->_getConstrateName( 'fk', $table, $columns );
+		return $this->_getConstrateName( 'fk', $tableName, $columns );
 	}
 	
-	protected function _getConstrateName( $prefix, $table, $columns )
+	protected function _getConstrateName( $prefix, $tableName, $columns )
 	{
-		return "$prefix-$table-" . implode( '-', (array)$columns );
+		return "$prefix-$tableName-" . implode( '-', (array)$columns );
 	}
 	
 }

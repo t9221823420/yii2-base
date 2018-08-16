@@ -1,15 +1,9 @@
-.dropdown-menu > li > * {
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: normal;
-    line-height: 1.42857143;
-    color: #333;
-    white-space: nowrap;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
+table caption {
+    max-width: 100%;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: black;
+    padding-bottom: 0;
 }
 
 .w-5 {
@@ -84,11 +78,10 @@
 .ui-widget-header .ui-state-default,
 .ui-button,
 html .ui-button.ui-state-disabled:hover,
-html .ui-button.ui-state-disabled:active
-{
+html .ui-button.ui-state-disabled:active {
     background: #f5f5f5 !important;
 }
 
-.mce-edit-area{
+.mce-edit-area {
     padding: 20px;
 }
