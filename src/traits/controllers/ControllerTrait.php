@@ -25,7 +25,7 @@ trait ControllerTrait
 	}
 	
 	
-	public function findModel( $id )
+	public function findModel( $id ): ?ActiveRecord
 	{
 		return $this->_findModel( $id );
 	}
@@ -86,7 +86,7 @@ trait ControllerTrait
 	 * @return null|static
 	 * @throws NotFoundHttpException
 	 */
-	protected function _findModel( $condition, $modelClass = null, $one = true )
+	protected function _findModel( $condition, $modelClass = null, $one = true ): ?ActiveRecord
 	{
 		if( !$modelClass ) {
 			
@@ -116,7 +116,7 @@ trait ControllerTrait
 		
 	}
 	
-	protected function _findModels( $condition, $modelClass = null )
+	protected function _findModels( $condition, $modelClass = null ): ?array
 	{
 		return $this->_findModel( $condition, $modelClass, false );
 	}
