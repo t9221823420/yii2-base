@@ -9,6 +9,7 @@
 namespace yozh\base\traits\controllers;
 
 use Yii;
+use yii\db\ActiveRecord;
 use yii\web\Response;
 
 trait ControllerTrait

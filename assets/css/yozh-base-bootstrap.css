@@ -6,6 +6,12 @@ table caption {
     padding-bottom: 0;
 }
 
+div.form-control.static{
+    border: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
 .w-5 {
     width: 5%
 }

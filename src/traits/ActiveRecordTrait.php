@@ -123,13 +123,13 @@ trait ActiveRecordTrait
 			}
 		}
 		
-		if ( $moduleId && class_exists( "$moduleNamespace\\controllers\\{$modelClass}Controller" ) ){
+		if( $moduleId && class_exists( "$moduleNamespace\\controllers\\{$modelClass}Controller" ) ) {
 			$route = mb_strtolower( $modelClass ) . '/' . $route;
 		}
-		elseif( $moduleId && class_exists( "$moduleNamespace\\controllers\\DefaultController" ) ){
+		else if( $moduleId && class_exists( "$moduleNamespace\\controllers\\DefaultController" ) ) {
 			$route = 'default/' . $route;
 		}
-		else{
+		else {
 			$moduleId = null;
 		}
 		
@@ -182,7 +182,7 @@ trait ActiveRecordTrait
 		$names = array_unique( $names );
 		
 		if( $only ) {
-			$names = array_intersect( $names, $only );
+			$names = array_intersect( $only, $names );
 		}
 		
 		if( $except ) {
@@ -224,4 +224,26 @@ trait ActiveRecordTrait
 		
 		return $values;
 	}
+	
+	public function readOnlyAttributes( ?array $attributes = [] ): array
+	{
+		return array_unique( array_merge( $attributes, [
+			'id',
+		] ) );
+		
+	}
+	
+	public function isReadOnlyAttribute( string $name ): bool
+	{
+		return in_array( $name, $this->readOnlyAttributes() );
+	}
+	
+	public function resetAttribute( $name )
+	{
+		if( $this->getOldAttribute( $name ) != $this->getAttribute( $name ) ) {
+			$this->setAttribute( $name, $this->getOldAttribute( $name ) );
+		}
+	}
+	
+	
 }

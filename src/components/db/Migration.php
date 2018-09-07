@@ -11,7 +11,7 @@ namespace yozh\base\components\db;
 use Yii;
 use yozh\base\components\db\ColumnSchemaBuilder;
 use yozh\base\components\db\Schema;
-use yozh\base\components\utils\ArrayHelper;
+use yozh\base\components\helpers\ArrayHelper;
 
 abstract class Migration extends \yii\db\Migration
 {
@@ -39,7 +39,12 @@ abstract class Migration extends \yii\db\Migration
 	const CONSTRAINTS_ACTION_CASCADE   = 'CASCADE';
 	const CONSTRAINTS_ACTION_SET_NULL  = 'SET NULL';
 	
-	protected static $_tableSchema;
+	/**
+	 * @var tableName
+	 */
+	protected static $_table;
+	
+	//protected static $_tableSchema;
 	
 	public static function getTableIndices( $tableName, $refresh = false )
 	{

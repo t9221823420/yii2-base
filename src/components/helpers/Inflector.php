@@ -6,7 +6,7 @@
  * Time: 22:48
  */
 
-namespace yozh\base\components\utils;
+namespace yozh\base\components\helpers;
 
 use Yii;
 use yii\base\Model;
