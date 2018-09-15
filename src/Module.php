@@ -30,11 +30,15 @@ abstract class Module extends BaseModule implements BootstrapInterface, ViewCont
 		}
 		else if(
 			( $controller = parent::createController( $route ) )
-			|| ( $controller = parent::createController( $this->defaultRoute . '/' . trim( $route, '/' ) ) )
+			// for cases such /module/subfolder -> /module/controllers/subfolder/DefaultController
+			|| ( ($route = trim( $route, '/' ) . '/' . $this->defaultRoute ) ) && $controller = parent::createController( $route  )
 		) {
-			
 			return $controller;
-			
+		}
+		// чтобы понять для чего это. Предположительно для /module/default/create
+		else if( $controller = parent::createController( $this->defaultRoute . '/' . trim( $route, '/' ) ) ) {
+			throw new \yii\base\InvalidParamException( "Check!!!" );
+			return $controller;
 		}
 		
 		return false;
@@ -48,5 +52,5 @@ abstract class Module extends BaseModule implements BootstrapInterface, ViewCont
 		}
 	}
 	
-
+	
 }

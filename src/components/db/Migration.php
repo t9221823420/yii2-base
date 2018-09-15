@@ -68,7 +68,7 @@ abstract class Migration extends \yii\db\Migration
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
-			'mode'       => self::ALTER_MODE_UPDATE,
+			'mode'       => static::ALTER_MODE_UPDATE,
 			'options'    => null,
 		];
 		
@@ -104,10 +104,10 @@ abstract class Migration extends \yii\db\Migration
 			$idxName      = $this->_getIdxName( $tableName, $columns );
 			$tableIndices = static::getTableIndices( $tableName );
 			
-			if( isset( $tableIndices[ $idxName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
+			if( isset( $tableIndices[ $idxName ] ) && $mode != static::ALTER_MODE_UPDATE ) {
 				continue;
 			}
-			else if( isset( $tableIndices[ $idxName ] ) && $mode == self::ALTER_MODE_UPDATE ) {
+			else if( isset( $tableIndices[ $idxName ] ) && $mode == static::ALTER_MODE_UPDATE ) {
 				$this->dropIndex(
 					$idxName,
 					$tableName
@@ -155,10 +155,10 @@ abstract class Migration extends \yii\db\Migration
 			$idxName          = $this->_getIdxName( $tableName, $column );
 			$tableForeignKeys = $tableSchema->foreignKeys;
 			
-			if( isset( $tableForeignKeys[ $fkName ] ) && $mode != self::ALTER_MODE_UPDATE ) {
+			if( isset( $tableForeignKeys[ $fkName ] ) && $mode != static::ALTER_MODE_UPDATE ) {
 				continue;
 			}
-			else if( isset( $tableForeignKeys[ $fkName ] ) && $mode == self::ALTER_MODE_UPDATE ) {
+			else if( isset( $tableForeignKeys[ $fkName ] ) && $mode == static::ALTER_MODE_UPDATE ) {
 				
 				$this->dropForeignKey(
 					$fkName,
@@ -257,7 +257,7 @@ abstract class Migration extends \yii\db\Migration
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
-			'mode'       => self::ALTER_MODE_UPDATE,
+			'mode'       => static::ALTER_MODE_UPDATE,
 			'options'    => null,
 		];
 		
@@ -274,7 +274,7 @@ abstract class Migration extends \yii\db\Migration
 			foreach( $columns as $key => $column ) {
 				
 				if( isset( $tableSchema->columns[ $key ] ) ) {
-					if( $mode == self::ALTER_MODE_UPDATE && !in_array( $key, $pk ) ) { //
+					if( $mode == static::ALTER_MODE_UPDATE && !in_array( $key, $pk ) ) { //
 						$this->alterColumn( $tableName, $key, $column );
 					}
 				}

@@ -73,7 +73,7 @@ trait ActiveRecordTrait
 		return $query;
 	}
 	
-	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true ): array
 	{
 		return static::_getList( $condition, $key, $value, $indexBy, $orderBy );
 	}
@@ -98,9 +98,12 @@ trait ActiveRecordTrait
 	
 	public static function getRoute( $route = 'index' )
 	{
-		$namespace       = ( new\ReflectionClass( static::class ) )->getNamespaceName();
-		$modelClass      = ( new\ReflectionClass( static::class ) )->getShortName();
-		$moduleNamespace = preg_replace( '/\\\\models/', '', $namespace );
+		$namespace  = ( new\ReflectionClass( static::class ) )->getNamespaceName();
+		$modelClass = ( new\ReflectionClass( static::class ) )->getShortName();
+		
+		preg_match( '/(?<moduleNamespace>.*)(?:\\\\models)(?<subpath>\\\\.*)?/', $namespace, $matches );
+		$moduleNamespace = $matches['moduleNamespace'] ?? '';
+		$subpath         = $matches['subpath'] ?? '';
 		
 		$moduleId = null;
 		
@@ -123,10 +126,10 @@ trait ActiveRecordTrait
 			}
 		}
 		
-		if( $moduleId && class_exists( "$moduleNamespace\\controllers\\{$modelClass}Controller" ) ) {
+		if( $moduleId && class_exists( "$moduleNamespace\\controllers$subpath\\{$modelClass}Controller" ) ) {
 			$route = mb_strtolower( $modelClass ) . '/' . $route;
 		}
-		else if( $moduleId && class_exists( "$moduleNamespace\\controllers\\DefaultController" ) ) {
+		else if( $moduleId && class_exists( "$moduleNamespace\\controllers$subpath\\DefaultController" ) ) {
 			$route = 'default/' . $route;
 		}
 		else {
@@ -143,7 +146,7 @@ trait ActiveRecordTrait
 		
 	}
 	
-	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true ): array
 	{
 		
 		$attributes = static::getTableSchema()->columns;
