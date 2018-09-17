@@ -91,9 +91,9 @@ trait EditActionTrait
 	public function run( ActiveRecord $Model = null )
 	{
 		
-		$params = $this->process( $Model );
+		$result = $this->process( $Model );
 		
-		if( $params === true ) {
+		if( $result === true ) {
 			
 			if( Yii::$app->request->isAjax ) {
 				
@@ -109,9 +109,14 @@ trait EditActionTrait
 			}
 			
 		}
+		elseif( $result instanceof Response ){
+			
+			return $result;
+			
+		}
 		else {
 			
-			return $this->controller->render( $this->id, $params );
+			return $this->controller->render( $this->id, $result );
 			
 		}
 		

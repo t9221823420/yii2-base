@@ -16,9 +16,9 @@ use yozh\base\models\BaseActiveQuery as ActiveQuery;
 trait ActiveRecordTrait
 {
 	
-	public static function getRawTableName()
+	public static function getRawTableName( $alias = null)
 	{
-		return Yii::$app->db->schema->getRawTableName( static::tableName() );
+		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
 	}
 	
 	

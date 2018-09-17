@@ -24,20 +24,20 @@ abstract class Module extends BaseModule implements BootstrapInterface, ViewCont
 		
 		// try to resolve ambiguity of controller and module names and return $app controller first
 		if( ( $controller = \Yii::$app->createControllerByID( $this->id ) ) && $controller->createAction( $route ) ) {
-			
 			return [ $controller, $route ];
-			
 		}
-		else if(
-			( $controller = parent::createController( $route ) )
-			// for cases such /module/subfolder -> /module/controllers/subfolder/DefaultController
-			|| ( ($route = trim( $route, '/' ) . '/' . $this->defaultRoute ) ) && $controller = parent::createController( $route  )
-		) {
+
+		elseif( $controller = parent::createController( $route ) ){
 			return $controller;
 		}
-		// чтобы понять для чего это. Предположительно для /module/default/create
+		
+		// for cases such as /module[/action] -> /module/controllers/DefaultController[/action]
 		else if( $controller = parent::createController( $this->defaultRoute . '/' . trim( $route, '/' ) ) ) {
-			throw new \yii\base\InvalidParamException( "Check!!!" );
+			return $controller;
+		}
+		
+		// for cases such  as /module/subfolder -> /module/controllers/subfolder/DefaultController/DefaultAction [index]
+		else if( $controller = parent::createController( trim( $route, '/' ) . '/' . $this->defaultRoute ) ) {
 			return $controller;
 		}
 		

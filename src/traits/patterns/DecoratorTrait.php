@@ -13,10 +13,12 @@ trait DecoratorTrait
 	
 	protected $_object;
 	
+	/* @todo - доделать когда будет необходимость
 	public static function __callStatic( string $name, array $params )
 	{
 		return call_user_func_array( [ LxModule::class, $name ], $params );
 	}
+	*/
 	
 	public function __call( $name, $params )
 	{
@@ -25,11 +27,11 @@ trait DecoratorTrait
 	
 	public function __get( $name )
 	{
-		return $this->_object->$name;
+		return $this->_object ? $this->_object->$name : parent::__get( $name );
 	}
 	
 	public function __set( $name, $value )
 	{
-		$this->_object->$name = $value;
+		$this->_object ? $this->_object->$name : parent::__set( $name, $value );
 	}
 }
