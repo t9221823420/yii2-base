@@ -53,7 +53,8 @@ trait ActiveRecordTrait
 			               $table . $value,
 			               $table . $key,
 		               ] )
-		               ->andFilterWhere( $condition ?? [] )
+		               //->andFilterWhere( $condition ?? [] ) filter не канает,потому что нельзя задавать условия типа NOT NULL
+		               ->andWhere( $condition ?? [] )
 		;
 		
 		if( $orderBy === true ) { //
