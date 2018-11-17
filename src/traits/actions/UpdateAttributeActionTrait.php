@@ -10,7 +10,7 @@ namespace yozh\base\traits\actions;
 
 use yii\db\ActiveRecordInterface;
 use yozh\base\interfaces\controllers\ControllerInterface;
-use yozh\base\models\BaseModel as ActiveRecord;
+use yozh\base\models\BaseActiveRecord as ActiveRecord;
 
 trait UpdateAttributeActionTrait
 {

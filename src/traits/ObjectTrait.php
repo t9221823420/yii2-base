@@ -17,7 +17,7 @@ trait ObjectTrait
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	public static function getConstants( $prefix = '' )
+	public static function getConstants( $prefix = '', $combineValues = false )
 	{
 		$list = ( new \ReflectionClass( static::class ) )->getConstants();
 		
@@ -27,6 +27,8 @@ trait ObjectTrait
 			}
 		}
 		
-		return $list;
+		return $combineValues
+			? array_combine( $list, $list )
+			: $list;
 	}
 }

@@ -8,7 +8,7 @@
 
 namespace yozh\base\behaviors;
 
-use yozh\base\models\BaseModel as Model;
+use yozh\base\models\BaseActiveRecord as Model;
 use yii\db\ActiveRecord;
 use yozh\base\traits\patterns\DecoratorTrait;
 

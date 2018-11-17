@@ -94,7 +94,7 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
 		return $temp;
 	}
 	
-	public static function addByPath( $path, &$array = [], $value )
+	public static function valueAddByPath( $path, &$array = [], $value, $unique = false )
 	{
 		return static::_byPath( $path, $array, self::BY_PATH_TYPE_ADD, $value );
 	}

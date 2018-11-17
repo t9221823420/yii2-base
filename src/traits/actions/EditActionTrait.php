@@ -11,12 +11,12 @@ namespace yozh\base\traits\actions;
 use Yii;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
-use yozh\base\models\BaseModel as ActiveRecord;
+use yozh\base\models\BaseActiveRecord as ActiveRecord;
 
 trait EditActionTrait
 {
 	
-	public function process( ActiveRecord $Model = null )
+	public function process( ActiveRecord $Model = null, bool $clone = false )
 	{
 		/**
 		 * @var ActiveRecord $defaultModelClass
@@ -47,10 +47,20 @@ trait EditActionTrait
 		/**
 		 * Leave it here because we may have to load some initial data to new model (for example parent_id)
 		 * and if there is not POST data the model would not be saved
+		 * This load only safe attributes. PrimaryKey is usualy unsafe and for Clone (for example) wouldn't be overrided
 		 */
 		$Model->load( Yii::$app->request->get(), '' );
 		
 		// Event AFTER_PRELOAD_MODEL
+		
+		if( $clone ){
+			
+			$Model->emptyPrimaryKey();
+			$Model->setOldAttributes( null );
+			
+			// Event CLONE_RESET_INITIAL_MODEL
+			
+		}
 		
 		// Event BEFORE_LOAD_MODEL
 		
@@ -88,10 +98,10 @@ trait EditActionTrait
 		
 	}
 	
-	public function run( ActiveRecord $Model = null )
+	public function run( ActiveRecord $Model = null, bool $clone = false )
 	{
 		
-		$result = $this->process( $Model );
+		$result = $this->process( $Model, $clone );
 		
 		if( $result === true ) {
 			

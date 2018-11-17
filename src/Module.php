@@ -26,18 +26,39 @@ abstract class Module extends BaseModule implements BootstrapInterface, ViewCont
 		if( ( $controller = \Yii::$app->createControllerByID( $this->id ) ) && $controller->createAction( $route ) ) {
 			return [ $controller, $route ];
 		}
-
-		elseif( $controller = parent::createController( $route ) ){
+		
+		/**
+		 * /module/controller/action (standart)
+		 */
+		else if( $controller = parent::createController( $route ) ) {
 			return $controller;
 		}
 		
-		// for cases such as /module[/action] -> /module/controllers/DefaultController[/action]
+		/**
+		 * /module[/action] -> /module/controllers/DefaultController[/action]
+		 *
+		 */
 		else if( $controller = parent::createController( $this->defaultRoute . '/' . trim( $route, '/' ) ) ) {
 			return $controller;
 		}
 		
-		// for cases such  as /module/subfolder -> /module/controllers/subfolder/DefaultController/DefaultAction [index]
+		/**
+		 * /module/subfolder -> /module/controllers/subfolder/DefaultController/DefaultAction [index]
+		 * /ysell/product -> ysell/product/default/index
+		 * module has subfolders with default controllers
+		 */
 		else if( $controller = parent::createController( trim( $route, '/' ) . '/' . $this->defaultRoute ) ) {
+			return $controller;
+		}
+		
+		/**
+		 * /module/subfolder/action -> /module/controllers/subfolder/DefaultController/action
+		 * /ysell/product/search -> ysell/product/default/search
+		 * insert defaultRoute instead of last '/'
+		 */
+		else if( ( $testRoute = preg_replace( '/\/(?=[a-zA-Z]+[\w-]+(?:\?|$))/', "/{$this->defaultRoute}/", $route ) )
+			&& $controller = parent::createController( $testRoute )
+		) {
 			return $controller;
 		}
 		
