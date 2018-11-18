@@ -9,18 +9,21 @@
 namespace yozh\base\traits;
 
 use Yii;
-use yozh\base\models\BaseActiveRecord as ActiveRecord;
+use yii\base\Module;
+use yii\db\ActiveRecord;
+use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
 trait ActiveRecordTrait
 {
-	use DBRecordTrait, ReadOnlyAttributesTrait;
-	
 	public function emptyPrimaryKey(): ActiveRecord
 	{
-<<<<<<< HEAD
 		$this->setAttributes( array_fill_keys( $this->primaryKey(), null ), false );
-=======
-		return Yii::$app->db->schema->getRawTableName( static::tableName() );
+		return $this;
+	}
+	
+	public static function getRawTableName( $alias = null)
+	{
+		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
 	}
 	
 	
@@ -55,8 +58,8 @@ trait ActiveRecordTrait
 			               $table . $value,
 			               $table . $key,
 		               ] )
-		               //->andFilterWhere( $condition ?? [] ) filter не канает,потому что нельзя задавать условия типа NOT NULL
-		               ->andWhere( $condition ?? [] )
+						//->andFilterWhere( $condition ?? [] ) filter не канает,потому что нельзя задавать условия типа NOT NULL
+			           ->andWhere( $condition ?? [] )
 		;
 		
 		if( $orderBy === true ) { //
@@ -76,7 +79,7 @@ trait ActiveRecordTrait
 		return $query;
 	}
 	
-	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true ): array
 	{
 		return static::_getList( $condition, $key, $value, $indexBy, $orderBy );
 	}
@@ -103,7 +106,10 @@ trait ActiveRecordTrait
 	{
 		$namespace       = ( new\ReflectionClass( static::class ) )->getNamespaceName();
 		$modelClass      = ( new\ReflectionClass( static::class ) )->getShortName();
-		$moduleNamespace = preg_replace( '/\\\\models/', '', $namespace );
+		
+		preg_match( '/(?<moduleNamespace>.*)(?:\\\\models)(?<subpath>\\\\.*)?/', $namespace, $matches );
+		$moduleNamespace = $matches['moduleNamespace'] ?? '';
+		$subpath         = $matches['subpath'] ?? '';
 		
 		$moduleId = null;
 		
@@ -126,10 +132,10 @@ trait ActiveRecordTrait
 			}
 		}
 		
-		if( $moduleId && class_exists( "$moduleNamespace\\controllers\\{$modelClass}Controller" ) ) {
+		if( $moduleId && class_exists( "$moduleNamespace\\controllers$subpath\\{$modelClass}Controller" ) ) {
 			$route = mb_strtolower( $modelClass ) . '/' . $route;
 		}
-		else if( $moduleId && class_exists( "$moduleNamespace\\controllers\\DefaultController" ) ) {
+		else if( $moduleId && class_exists( "$moduleNamespace\\controllers$subpath\\DefaultController" ) ) {
 			$route = 'default/' . $route;
 		}
 		else {
@@ -146,7 +152,7 @@ trait ActiveRecordTrait
 		
 	}
 	
-	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true )
+	private static function _getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true ): array
 	{
 		
 		$attributes = static::getTableSchema()->columns;
@@ -169,9 +175,84 @@ trait ActiveRecordTrait
 	public function attributes( ?array $only = null, ?array $except = null, ?bool $schemaOnly = false )
 	{
 		$names = array_keys( static::getTableSchema()->columns );
->>>>>>> remotes/origin/temp
 		
-		return $this;
+		if( !$schemaOnly ) {
+			
+			$class = new \ReflectionClass( $this );
+			
+			foreach( $class->getProperties( \ReflectionProperty::IS_PUBLIC ) as $property ) {
+				if( !$property->isStatic() ) {
+					$names[] = $property->getName();
+				}
+			}
+			
+		}
+		
+		$names = array_unique( $names );
+		
+		if( $only ) {
+			$names = array_intersect( $only, $names );
+		}
+		
+		if( $except ) {
+			$names = array_diff( $names, $except );
+		}
+		
+		return $names;
 	}
+	
+	/**
+	 * Returns attribute values.
+	 * @param array $only list of attributes whose value needs to be returned.
+	 * Defaults to null, meaning all attributes listed in [[attributes()]] will be returned.
+	 * If it is an array, only the attributes in the array will be returned.
+	 * @param array $except list of attributes whose value should NOT be returned.
+	 * @return array attribute values (name => value).
+	 */
+	public function getRawAttributes( ?array $only = null, ?array $except = [], ?bool $schemaOnly = false )
+	{
+		$values = [];
+		
+		if( $only === null ) {
+			$only = $this->attributes( $only, $except, $schemaOnly );
+		}
+		
+		foreach( $only as $name ) {
+			$values[ $name ] = $this->getAttribute( $name );
+		}
+		
+		if( $except ) {
+			$values = array_diff_key( $values, array_flip( $except ) );
+		}
+		
+		/*
+		foreach( $except as $name ) {
+			unset( $values[ $name ] );
+		}
+		*/
+		
+		return $values;
+	}
+	
+	public function readOnlyAttributes( ?array $attributes = [] ): array
+	{
+		return array_unique( array_merge( $attributes, [
+			'id',
+		] ) );
+		
+	}
+	
+	public function isReadOnlyAttribute( string $name ): bool
+	{
+		return in_array( $name, $this->readOnlyAttributes() );
+	}
+	
+	public function resetAttribute( $name )
+	{
+		if( $this->getOldAttribute( $name ) != $this->getAttribute( $name ) ) {
+			$this->setAttribute( $name, $this->getOldAttribute( $name ) );
+		}
+	}
+	
 	
 }

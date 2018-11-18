@@ -103,6 +103,23 @@ trait EditActionTrait
 		
 		$result = $this->process( $Model, $clone );
 		
+		switch ( $this->id ) {
+			
+			case 'create' :
+			case 'update' :
+			case 'clone' :
+				
+				$viewName = 'edit';
+				
+				break;
+			
+			default:
+				
+				$viewName = $this->id;
+			
+		}
+		
+		
 		if( $result === true ) {
 			
 			if( Yii::$app->request->isAjax ) {
@@ -126,7 +143,7 @@ trait EditActionTrait
 		}
 		else {
 			
-			return $this->controller->render( $this->id, $result );
+			return $this->controller->render( $viewName, $result );
 			
 		}
 		
