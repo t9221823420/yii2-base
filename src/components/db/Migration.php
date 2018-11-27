@@ -59,10 +59,13 @@ abstract class Migration extends \yii\db\Migration
 			$data[ $tableName ][ $index->name ] = $index;
 		}
 		
+		return $data;
 	}
 	
 	public function safeUp( $params = [] )
 	{
+		//return true;
+		
 		$defaults = [
 			'tableName'  => static::$_table,
 			'columns'    => static::getColumns(),
@@ -104,21 +107,39 @@ abstract class Migration extends \yii\db\Migration
 			$idxName      = $this->_getIdxName( $tableName, $columns );
 			$tableIndices = static::getTableIndices( $tableName );
 			
-			if( isset( $tableIndices[ $idxName ] ) && $mode != static::ALTER_MODE_UPDATE ) {
-				continue;
-			}
-			else if( isset( $tableIndices[ $idxName ] ) && $mode == static::ALTER_MODE_UPDATE ) {
-				$this->dropIndex(
-					$idxName,
-					$tableName
-				);
+			echo "\nCreating Index '$idxName' for:\n"
+				. "\ttable: '$tableName', columns: " . implode( ', ', (array)$columns ) . "\n"
+			;
+			
+			if( $tableIndices[ $idxName ] ?? false ) {
+				
+				$message = "Index '$idxName' exists.\n"
+					. "Drop Index for columns '" . implode( ', ', (array)$columns ) . "' for table '$tableName' before creating?\n";
+				
+				if( Yii::$app->controller->dropIdxs !== false
+					&& ( Yii::$app->controller->dropIdxs || Yii::$app->controller->confirm( $message, false ) ) ) {
+					
+					try {
+						$this->dropIndex( $idxName, $tableName );
+					} catch( \Exception $e ) {
+						echo "not exists\n";
+					}
+				}
+				else{
+					echo "Skip creation of Index '$idxName'\n";
+					continue;
+				}
 			}
 			
-			$this->createIndex(
-				$idxName,
-				$tableName,
-				$columns
-			);
+			try {
+				$this->createIndex(
+					$idxName,
+					$tableName,
+					$columns
+				);
+			} catch( \Exception $e ) {
+				echo "can not create index $idxName\n";
+			}
 			
 		}
 		
@@ -149,43 +170,6 @@ abstract class Migration extends \yii\db\Migration
 			extract( ArrayHelper::setDefaults( $ref, $defaults ) );
 			
 			$this->createForeignKey( $tableName, $columns, $refTable, $refColumns, $onDelete, $onUpdate );
-			
-			/*
-			$fkName           = $this->_getFkName( $tableName, $column );
-			$idxName          = $this->_getIdxName( $tableName, $column );
-			$tableForeignKeys = $tableSchema->foreignKeys;
-			
-			if( isset( $tableForeignKeys[ $fkName ] ) && $mode != static::ALTER_MODE_UPDATE ) {
-				continue;
-			}
-			else if( isset( $tableForeignKeys[ $fkName ] ) && $mode == static::ALTER_MODE_UPDATE ) {
-				
-				$this->dropForeignKey(
-					$fkName,
-					$tableName
-				);
-				
-				$this->dropIndex(
-					$idxName,
-					$tableName
-				);
-			}
-			
-			$this->createIndex(
-				$idxName,
-				$tableName,
-				$column
-			);
-			
-			$this->addForeignKey(
-				$fkName,
-				$tableName,
-				$column,
-				$refTable,
-				$refColumns,
-				'CASCADE'
-			);
-			*/
 			
 		}
 	}
@@ -237,10 +221,6 @@ abstract class Migration extends \yii\db\Migration
 		$this->dropTable( $tableName );
 	}
 	
-	/*
-	 * By default Indices are generating from References
-	 */
-	
 	public function alterTable( $params = [] )
 	{
 		
@@ -253,7 +233,7 @@ abstract class Migration extends \yii\db\Migration
 		 * @var $options array
 		 */
 		$defaults = [
-			'tableName'      => static::$_table,
+			'tableName'  => static::$_table,
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
@@ -358,21 +338,41 @@ abstract class Migration extends \yii\db\Migration
 			. "\ttable: '$tableName', columns: " . implode( ', ', (array)$columns ) . "\n"
 			. "\treference: '$refTable', columns: " . implode( ', ', (array)$refColumns ) . "\n";
 		
-		try {
-			$this->dropForeignKey( $fkName, $tableName );
-		} catch( \Exception $e ) {
-			echo "not exists\n";
+		$currentFks = Yii::$app->db->schema->getTableSchema( $tableName, true )->foreignKeys;
+		
+		if( $currentFks[ $fkName ] ?? false ) {
+			
+			$message = "Foreign key '$fkName' exists.\n"
+				. "Drop Index for columns '" . implode( ', ', (array)$columns ) . "' for table '$tableName' before creating?\n";
+			
+			if( Yii::$app->controller->dropFks !== false
+				&& ( Yii::$app->controller->dropFks || Yii::$app->controller->confirm( $message, false ) ) ) {
+				
+				try {
+					$this->dropForeignKey( $fkName, $tableName );
+				} catch( \Exception $e ) {
+					echo "not exists\n";
+				}
+				
+				try {
+					$this->dropIndex( $idxName, $tableName );
+				} catch( \Exception $e ) {
+					echo "not exists\n";
+				}
+				
+			}
+			else {
+				echo "Skip creation of foreign key '$fkName'\n";
+				return true;
+			}
+			
 		}
 		
-		try {
-			$this->dropIndex( $idxName, $tableName );
-		} catch( \Exception $e ) {
-			echo "not exists\n";
-		}
+		$message = "Truncate columns '" . implode( ', ', (array)$columns ) . "' for table '$tableName' before creating new Index?\n";
 		
-		$message = "Empty column '" . implode( ', ', (array)$columns ) . "' in table '$tableName' before creating?";
-		
-		if( Yii::$app->controller->confirm( $message ) ) {
+		if( Yii::$app->controller->truncateIdxs !== false
+			&& ( Yii::$app->controller->truncateIdxs || Yii::$app->controller->confirm( $message, false ) ) ) {
+			//echo "Truncate '$fkName'\n";
 			$this->update( $tableName, array_fill_keys( (array)$columns, null ) );
 		}
 		
@@ -383,17 +383,7 @@ abstract class Migration extends \yii\db\Migration
 				$columns
 			);
 		} catch( \Exception $e ) {
-			echo "can not create index $idxName\n";
-		}
-		
-		try {
-			$this->createIndex(
-				$idxName,
-				$tableName,
-				$columns
-			);
-		} catch( \Exception $e ) {
-			echo "can not create index $idxName\n";
+			echo "can not create Index $idxName\n";
 		}
 		
 		$this->addForeignKey(
