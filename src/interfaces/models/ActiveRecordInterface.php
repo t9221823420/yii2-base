@@ -10,14 +10,14 @@ namespace yozh\base\interfaces\models;
 
 interface ActiveRecordInterface extends \yii\db\ActiveRecordInterface
 {
-	public function attributes( ?array $only = null, ?array $except = null, ?bool $schemaOnly = false );
-	
-	public function getRawAttributes( ?array $only = null, ?array $except = [], ?bool $schemaOnly = false );
-	
-	public static function getList();
+	public static function getList( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true ): array;
 	
 	public static function getListQuery( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null );
 	
 	public static function getShemaReferences();
+	
+	public function attributes( ?array $only = null, ?array $except = null, ?bool $schemaOnly = false );
+	
+	public function getRawAttributes( ?array $only = null, ?array $except = [], ?bool $schemaOnly = false );
 	
 }
