@@ -80,6 +80,13 @@ class MigrateController extends \yii\console\controllers\MigrateController
 			if( is_array( $this->migrationPath ) ) {
 				foreach( $this->migrationPath as $path ) {
 					if( is_dir( $path ) && $dirs = FileHelper::findDirectories( $path ) ) {
+						
+						foreach( $dirs as $key => $dir ) {
+							if( strpos( $dir, 'namespaced' ) ) {
+								unset( $dirs[ $key ] );
+							}
+						}
+						
 						$this->migrationPath = array_merge( $this->migrationPath, $dirs );
 					}
 				}
@@ -252,7 +259,7 @@ class MigrateController extends \yii\console\controllers\MigrateController
 					continue;
 				}
 				
-				if( $files ){
+				if( $files ) {
 					
 					$migrationsGroup = [];
 					
