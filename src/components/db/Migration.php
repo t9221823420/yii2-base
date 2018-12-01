@@ -39,10 +39,14 @@ abstract class Migration extends \yii\db\Migration
 	const CONSTRAINTS_ACTION_CASCADE   = 'CASCADE';
 	const CONSTRAINTS_ACTION_SET_NULL  = 'SET NULL';
 	
+	public $mode = self::ALTER_MODE_UPDATE;
+	
 	/**
 	 * @var tableName
 	 */
 	protected static $_table;
+	
+	public static $depends = [];
 	
 	//protected static $_tableSchema;
 	
@@ -71,13 +75,11 @@ abstract class Migration extends \yii\db\Migration
 			'columns'    => static::getColumns(),
 			'indices'    => static::getIndices(),
 			'references' => static::getReferences(),
-			'mode'       => static::ALTER_MODE_UPDATE,
 			'options'    => null,
 		];
 		
 		/**
 		 * @var $tableName string
-		 * @var $mode string
 		 * @var $indices array
 		 * @var $references array
 		 */
@@ -163,7 +165,6 @@ abstract class Migration extends \yii\db\Migration
 			
 			/**
 			 * @var $tableName string
-			 * @var $mode string
 			 * @var $indices array
 			 * @var $references array
 			 */
@@ -229,7 +230,6 @@ abstract class Migration extends \yii\db\Migration
 		 * @var $columns array
 		 * @var $indices array
 		 * @var $references array
-		 * @var $mode string
 		 * @var $options array
 		 */
 		$defaults = [
@@ -245,7 +245,7 @@ abstract class Migration extends \yii\db\Migration
 		
 		if( $tableSchema = \Yii::$app->db->schema->getTableSchema( $tableName ) ) {
 			
-			if( $mode == self::ALTER_MODE_DROP_TABLE ) {
+			if( $this->mode == self::ALTER_MODE_DROP_TABLE ) {
 				$this->_safeDown( $tableName, $indices, $references );
 			}
 			
@@ -254,7 +254,7 @@ abstract class Migration extends \yii\db\Migration
 			foreach( $columns as $key => $column ) {
 				
 				if( isset( $tableSchema->columns[ $key ] ) ) {
-					if( $mode == static::ALTER_MODE_UPDATE && !in_array( $key, $pk ) ) { //
+					if( $this->mode == static::ALTER_MODE_UPDATE && !in_array( $key, $pk ) ) { //
 						$this->alterColumn( $tableName, $key, $column );
 					}
 				}

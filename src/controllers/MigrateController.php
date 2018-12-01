@@ -8,14 +8,23 @@
 
 namespace yozh\base\controllers;
 
+use Yii;
 use yii\console\ExitCode;
 use yii\helpers\Console;
-use yii\helpers\FileHelper;
+use yozh\base\components\helpers\FileHelper;
+use yozh\base\components\db\Migration;
 use yozh\base\traits\controllers\ConsoleControllerTrait;
 
 class MigrateController extends \yii\console\controllers\MigrateController
 {
 	use ConsoleControllerTrait;
+	
+	const SORT_COMMON   = 'common';
+	const SORT_BY_GROUP = 'group';
+	
+	public $defaultDir = 'migrations';
+	
+	public $alterMode = Migration::ALTER_MODE_UPDATE;
 	
 	protected $_dropIdxs;
 	
@@ -23,9 +32,20 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	
 	protected $_dropFks;
 	
+	protected $_migrations;
+	
+	protected $_migrationsByGroup;
+	
+	protected $_applied;
+	
 	public function options( $actionID )
 	{
-		return array_unique( array_merge( parent::options( $actionID ), [ 'dropFks', 'dropIdxs', 'truncateIdxs', ] ) );
+		return array_unique( array_merge( parent::options( $actionID ), [
+			'dropFks',
+			'dropIdxs',
+			'truncateIdxs',
+			'alterMode',
+		] ) );
 	}
 	
 	public function __get( $name )
@@ -67,35 +87,6 @@ class MigrateController extends \yii\console\controllers\MigrateController
 			default:
 				return parent::__set( $name, $value );
 		}
-	}
-	
-	public function beforeAction( $action )
-	{
-		if( parent::beforeAction( $action ) ) {
-			
-			if( is_string( $this->migrationPath ) ) {
-				$this->migrationPath = [ $this->migrationPath ];
-			}
-			
-			if( is_array( $this->migrationPath ) ) {
-				foreach( $this->migrationPath as $path ) {
-					if( is_dir( $path ) && $dirs = FileHelper::findDirectories( $path ) ) {
-						
-						foreach( $dirs as $key => $dir ) {
-							if( strpos( $dir, 'namespaced' ) ) {
-								unset( $dirs[ $key ] );
-							}
-						}
-						
-						$this->migrationPath = array_merge( $this->migrationPath, $dirs );
-					}
-				}
-			}
-			
-			return true;
-		}
-		
-		return false;
 	}
 	
 	/**
@@ -148,12 +139,16 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	 *
 	 * @return int the status of the action execution. 0 means normal, other values mean abnormal.
 	 */
-	public function actionUp( $data = 0 )
+	public function actionUp( $data = null )
 	{
 		$result = $this->getNewMigrations( $data );
 		
 		if( $result == ExitCode::OK ) {
+			
+			$this->stdout( "No new migrations found. Your system is up-to-date.\n", Console::FG_GREEN );
+			
 			return ExitCode::OK;
+			
 		}
 		else {
 			$migrations = (array)$result;
@@ -162,27 +157,31 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		$total = count( $migrations );
 		$n     = count( $migrations );
 		if( $n === $total ) {
-			$this->stdout( "Total $n new " . ( $n === 1 ? 'migration' : 'migrations' ) . " to be applied:\n", Console::FG_YELLOW );
+			$this->stdout( "Total $n new " . ( $n === 1 ? 'migration' : 'migrations' ) . " to be applied:\n\n", Console::FG_YELLOW );
 		}
 		else {
-			$this->stdout( "Total $n out of $total new " . ( $total === 1 ? 'migration' : 'migrations' ) . " to be applied:\n", Console::FG_YELLOW );
+			$this->stdout( "Total $n out of $total new " . ( $total === 1 ? 'migration' : 'migrations' ) . " to be applied:\n\n", Console::FG_YELLOW );
 		}
 		
-		foreach( $migrations as $key => $migration ) {
+		$nameLimit = $this->getMigrationNameLimit();
+		
+		foreach( $this->_migrationsByGroup as $path => $group ) {
 			
-			$nameLimit = $this->getMigrationNameLimit();
+			$this->stdout( "$path\n" );
 			
-			if( $nameLimit !== null && strlen( $migration ) > $nameLimit ) {
+			foreach( $group as $class => $file ) {
 				
-				$this->stdout( "\nThe migration name '$migration' is too long. Its not possible to apply this migration.\n", Console::FG_RED );
+				if( $nameLimit !== null && strlen( $class ) > $nameLimit ) {
+					
+					$this->stdout( "\nThe migration name '$class' is too long. Its not possible to apply this migration.\n", Console::FG_RED );
+					
+					return ExitCode::UNSPECIFIED_ERROR;
+				}
 				
-				return ExitCode::UNSPECIFIED_ERROR;
+				$this->stdout( "\t$class\n" );
 			}
-			
-			$migrationPath = preg_replace( '/\d+(.*)/', '$1', $key );
-			
-			$this->stdout( "\t$migrationPath\n" );
 		}
+		
 		$this->stdout( "\n" );
 		
 		$applied = 0;
@@ -198,120 +197,140 @@ class MigrateController extends \yii\console\controllers\MigrateController
 			}
 			
 			$this->stdout( "\n$n " . ( $n === 1 ? 'migration was' : 'migrations were' ) . " applied.\n", Console::FG_GREEN );
+			$this->stdout( "\nOrder of applied migrations:\n\n", Console::FG_GREEN );
+			
+			/**
+			 * $this->_applied includes db history
+			 */
+			foreach( $this->_applied as $class => $val ) {
+				if( isset( $this->_migrations[ $class ] ) ) {
+					$this->stdout( "\t$class\n", Console::FG_GREEN );
+				}
+			}
+			
 			$this->stdout( "\nMigrated up successfully.\n", Console::FG_GREEN );
 		}
 	}
 	
-	/**
-	 * added $dataas mixed
-	 * - if $data is array - expects list of migration names.
-	 * - if $data is integer - used instead of $limit from @see \yii\console\controllers\MigrateController::actionUp()
-	 * ( static::actionUp does not use $limit at all)
-	 *
-	 * @param null $data
-	 * @return array|int|null
-	 *
-	 * if $data is array - expects list of migration names. ca
-	 */
-	protected function getNewMigrations( $data = null )
+	protected function getNewMigrations( $data = null, $sort = self::SORT_BY_GROUP )
 	{
-		$applied = [];
+		$migrations = [];
 		
-		foreach( $this->getMigrationHistory( null ) as $class => $time ) {
-			$applied[ trim( $class, '\\' ) ] = true;
-		}
-		
-		/**
-		 * this block used by actionUp after actionMask prepares list of migrations
-		 */
-		if( is_array( $data ) && count( $data ) ) {
-			$migrations = $data;
+		if( is_numeric( $data ) && (int)$data ) {
+			$limit = (int)$data;
 		}
 		else {
-			
-			$migrationPaths = [];
-			
-			if( is_array( $this->migrationPath ) ) {
-				foreach( $this->migrationPath as $path ) {
-					$migrationPaths[] = [ $path, '' ];
-				}
-			}
-			else if( !empty( $this->migrationPath ) ) {
-				$migrationPaths[] = [ $this->migrationPath, '' ];
-			}
-			foreach( $this->migrationNamespaces as $namespace ) {
-				$migrationPaths[] = [ $this->getNamespacePath( $namespace ), $namespace ];
-			}
-			
-			$migrations = [];
-			
-			foreach( $migrationPaths as $item ) {
+			$limit = null;
+		}
+		
+		if( is_array( $data ) ) {
+			$migrationPaths = $data;
+		}
+		else {
+			$migrationPaths = array_merge( ( $this->migrationPath ?? [] ), ( $this->migrationNamespaces ?? [] ) );
+		}
+		
+		foreach( $migrationPaths as $key => $path ) {
+			if( $paths = FileHelper::resolvePath( $path, [ 'filter' => '/migration/' ] ) ) {
 				
-				list( $migrationPath, $namespace ) = $item;
-				
-				if( is_dir( $migrationPath ) ) {
-					$files = FileHelper::findFiles( $migrationPath, [ 'only' => [ '*.php' ], 'recursive' => false ] );
-				}
-				else if( is_file( $migrationPath ) ) {
-					$files = [ $migrationPath ];
-				}
-				else {
-					continue;
+				foreach( $migrationPaths as $key => $searchPath ) {
+					if( $searchPath == $path ) {
+						array_splice( $migrationPaths, $key, 1, $paths );
+						break;
+					}
 				}
 				
-				if( $files ) {
+			}
+			else {
+				unset( $migrationPaths[ $key ] );
+			}
+		}
+		
+		if( is_array( $data ) ) {
+			$this->migrationPath = array_unique( array_merge( $this->migrationPath, $migrationPaths ) );
+		}
+		else {
+			$this->migrationPath = $migrationPaths;
+		}
+		
+		foreach( $migrationPaths as $path ) {
+			
+			if( is_dir( $path ) ) {
+				$files = FileHelper::findFiles( $path, [ 'only' => [ '*.php' ], 'recursive' => false ] );
+			}
+			else if( is_file( $path ) ) {
+				$files = [ $path ];
+			}
+			else {
+				continue;
+			}
+			
+			if( $files ) {
+				
+				$migrationsGroup = [];
+				
+				foreach( $files as $file ) {
 					
-					$migrationsGroup = [];
-					
-					foreach( $files as $file ) {
+					if( preg_match( '/(m(\d{6}_?\d{6})\D.*?)\.php$/is', $file, $matches ) && is_file( $file ) ) {
 						
-						if( preg_match( '/(m(\d{6}_?\d{6})\D.*?)\.php$/is', $file, $matches ) ) {
+						require_once( $file );
+						
+						$class = $matches[1];
+						
+						if( $ns = FileHelper::extract_namespace( $file ) ) {
+							$class = $ns . '\\' . $class;
+						}
+						
+						$time = str_replace( '_', '', $matches[2] );
+						
+						$suffix = preg_replace( '/.*' . $this->defaultDir . '(.*)\.php/', '$1', $file );
+						
+						if( !$this->_isApplied( $class ) ) {
 							
-							$class = $matches[1];
+							$migrationsGroup[ $time . $suffix ] = $class;
 							
-							if( !empty( $namespace ) ) {
-								$class = $namespace . '\\' . $class;
+							if( !isset( $this->_migrationsByGroup[ pathinfo( $file )['dirname'] ][ $class ] ) ) {
+								$this->_migrationsByGroup[ pathinfo( $file )['dirname'] ][ $class ] = $file;
+								$this->_migrations[ $class ]                                        = $file;
 							}
 							
-							$time = str_replace( '_', '', $matches[2] );
-							
-							$suffix = preg_replace( '/.*migrations(.*)\.php/', '$1', $file );
-							
-							if( !isset( $applied[ $class ] ) ) {
-								
-								$migrationsGroup[ $time . $suffix ] = $class;
-								
-							}
 						}
 					}
-					
-					// time sort
-					ksort( $migrationsGroup );
-					$migrations = array_merge( $migrations, $migrationsGroup );
-				};
-				
-			}
-			
-			$migrations = array_unique( $migrations );
-			
-			if( empty( (array)$migrations ) ) {
-				
-				$this->stdout( "No new migrations found. Your system is up-to-date.\n", Console::FG_GREEN );
-				
-				return ExitCode::OK;
-			}
-			
-			if( is_numeric( $data ) ) {
-				$data = (int)$data;
-				
-				if( $data > 0 ) {
-					$migrations = array_slice( $migrations, 0, $data );
 				}
-			}
+				
+				// time sort
+				ksort( $migrationsGroup );
+				$migrations = array_merge( $migrations, $migrationsGroup );
+			};
 			
+		}
+		
+		$migrations = array_unique( $migrations );
+		
+		if( $sort == self::SORT_COMMON ) {
+			ksort( $migrations );
+		}
+		
+		if( (int)$limit > 0 ) {
+			$migrations = array_slice( $migrations, 0, $limit );
 		}
 		
 		return $migrations;
+	}
+	
+	/**
+	 * Creates a new migration instance.
+	 * @param string $class the migration class name
+	 * @return \yii\db\Migration the migration instance
+	 */
+	protected function createMigration( $class )
+	{
+		return Yii::createObject( [
+			'class'   => $class,
+			'db'      => $this->db,
+			'compact' => $this->compact,
+			'mode'    => $this->alterMode,
+		] );
 	}
 	
 	protected function addMigrationHistory( $version )
@@ -320,4 +339,80 @@ class MigrateController extends \yii\console\controllers\MigrateController
 			parent::addMigrationHistory( $version ); // TODO: Change the autogenerated stub
 		}
 	}
+	
+	protected function _isApplied( $class, $strict = false )
+	{
+		if( !$this->_applied ) {
+			foreach( $this->getMigrationHistory( null ) as $class => $time ) {
+				$this->_applied[ trim( $class, '\\' ) ] = true;
+			}
+		}
+		
+		if( $strict && isset( $this->_applied[ $class ] ) ) {
+			return true;
+		}
+		else {
+			
+			foreach( $this->_applied ?? [] as $key => $value ) {
+				if( strpos( $key, ( new\ReflectionClass( $class ) )->getShortName() ) !== false
+					|| ( is_subclass_of( $class, $key ) && !is_subclass_of( $class, yozh\base\components\db\Migration::class ) )
+				) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	protected function _processDependencies( array $dependencies )
+	{
+		foreach( $dependencies as $key => $dependency ) {
+			if( is_string( $dependency ) && isset( $this->_migrations[ $dependency ] ) ) {
+				$dependencies[ $key ] = $this->_migrations[ $dependency ];
+			}
+		}
+		
+		$migrations = $this->getNewMigrations( $dependencies );
+		
+		foreach( $migrations as $class ) {
+			
+			if( !$this->migrateUp( $class ) ) {
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+	
+	protected function migrateUp( $class )
+	{
+		if( $class == 'yozh\ysell\migrations\product\namespaced\m000000_000000_ysell_product_dev' ) {
+			$trap = 1;
+		}
+		
+		if( is_subclass_of( $class, Migration::class ) && $class::$depends ) {
+			
+			if( !$this->_processDependencies( $class::$depends ) ) {
+				return false;
+			}
+			
+		}
+		
+		if( $this->_isApplied( $class ) ) {
+			return true;
+		}
+		else if( parent::migrateUp( $class ) ) {
+			
+			$this->_applied[ $class ] = true;
+			
+			return true;
+		}
+		
+		return false;
+		
+	}
+	
+	
 }
