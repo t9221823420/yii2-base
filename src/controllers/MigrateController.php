@@ -32,11 +32,11 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	
 	protected $_dropFks;
 	
-	protected $_migrations;
+	protected $_migrations = [];
 	
-	protected $_migrationsByGroup;
+	protected $_migrationsByGroup = [];
 	
-	protected $_applied;
+	protected $_applied = [];
 	
 	public function options( $actionID )
 	{
@@ -212,6 +212,18 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		}
 	}
 	
+	public function runAction( $id, $params = [] )
+	{
+		/**
+		 * because of $migrationPaths = array_merge( ( $this->migrationPath ?? [] ), ( $this->migrationNamespaces ?? [] ) ); in getNewMigrations
+		 */
+		if( isset( $params['migrationPath'] ) || isset( $params['migrationNamespaces'] ) ) {
+			$this->migrationPath = $this->migrationNamespaces = [];
+		}
+		
+		return parent::runAction( $id, $params );
+	}
+	
 	protected function getNewMigrations( $data = null, $sort = self::SORT_BY_GROUP )
 	{
 		$migrations = [];
@@ -325,12 +337,20 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	 */
 	protected function createMigration( $class )
 	{
-		return Yii::createObject( [
+		$params = [
 			'class'   => $class,
 			'db'      => $this->db,
 			'compact' => $this->compact,
-			'mode'    => $this->alterMode,
-		] );
+		
+		];
+		
+		if( $class instanceof Migration ) {
+			array_push( $params, [
+				'mode' => $this->alterMode,
+			] );
+		}
+		
+		return Yii::createObject( $params );
 	}
 	
 	protected function addMigrationHistory( $version )
@@ -343,8 +363,8 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	protected function _isApplied( $class, $strict = false )
 	{
 		if( !$this->_applied ) {
-			foreach( $this->getMigrationHistory( null ) as $class => $time ) {
-				$this->_applied[ trim( $class, '\\' ) ] = true;
+			foreach( $this->getMigrationHistory( null ) as $appliedClass => $time ) {
+				$this->_applied[ trim( $appliedClass, '\\' ) ] = true;
 			}
 		}
 		
