@@ -15,17 +15,10 @@ use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
 trait ActiveRecordTrait
 {
-	public function emptyPrimaryKey(): ActiveRecord
-	{
-		$this->setAttributes( array_fill_keys( $this->primaryKey(), null ), false );
-		return $this;
-	}
-	
-	public static function getRawTableName( $alias = null)
+	public static function getRawTableName( $alias = null )
 	{
 		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
 	}
-	
 	
 	/**
 	 * Return records as Array id => column for dropdowns
@@ -58,7 +51,7 @@ trait ActiveRecordTrait
 			               $table . $value,
 			               $table . $key,
 		               ] )
-						//->andFilterWhere( $condition ?? [] ) filter не канает,потому что нельзя задавать условия типа NOT NULL
+			//->andFilterWhere( $condition ?? [] ) filter не канает,потому что нельзя задавать условия типа NOT NULL
 			           ->andWhere( $condition ?? [] )
 		;
 		
@@ -102,10 +95,49 @@ trait ActiveRecordTrait
 		return static::getTableSchema()->foreignKeys;
 	}
 	
+	public static function getShemaColumns()
+	{
+		$columns = static::getTableSchema()->columns;
+		
+		foreach( $columns as $name => $config ) {
+			if( preg_match( '/(?<type>[a-z]+)[\(]{0,}(?<size>\d*)/', $config->dbType, $matches ) ) {
+				
+				if( $matches['type'] == 'tinyint' && $matches['size'] == 1 ) { //boolean
+					$config->type = 'integer';
+					$config->phpType = 'boolean';
+				}
+				
+				else if( $matches['type'] == 'enum' ) {
+					$config->phpType   = 'array';
+					$config->dbType = 'enum';
+				}
+				
+				else if( $matches['type'] == 'set' ) {
+					
+					/**
+					 * @todo temporary hack
+					 */
+					if( preg_match_all("/'[^']*'/", $config->dbType, $values) ){
+						foreach ($values[0] as $i => $value) {
+							$values[$i] = trim($value, "'");
+						}
+						$config->enumValues = $values;
+					}
+					
+					$config->phpType   = 'array';
+					$config->dbType = 'set';
+				}
+				
+			}
+		}
+		
+		return $columns;
+	}
+	
 	public static function getRoute( $route = 'index' )
 	{
-		$namespace       = ( new\ReflectionClass( static::class ) )->getNamespaceName();
-		$modelClass      = ( new\ReflectionClass( static::class ) )->getShortName();
+		$namespace  = ( new\ReflectionClass( static::class ) )->getNamespaceName();
+		$modelClass = ( new\ReflectionClass( static::class ) )->getShortName();
 		
 		preg_match( '/(?<moduleNamespace>.*)(?:\\\\models)(?<subpath>\\\\.*)?/', $namespace, $matches );
 		$moduleNamespace = $matches['moduleNamespace'] ?? '';
@@ -165,6 +197,13 @@ trait ActiveRecordTrait
 		}
 		
 		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
+	}
+	
+	public function emptyPrimaryKey(): ActiveRecord
+	{
+		$this->setAttributes( array_fill_keys( $this->primaryKey(), null ), false );
+		
+		return $this;
 	}
 	
 	/**

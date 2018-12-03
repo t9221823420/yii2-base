@@ -109,6 +109,9 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		}
 		
 		if( $migrations ) {
+			
+			$this->_filterMigrationsByGroup( $migrations );
+			
 			return $this->actionUp( $migrations );
 		}
 		else {
@@ -119,9 +122,9 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	
 	/**
 	 * $limit moved to @see MigrateController::getNewMigrations() as $data
-	 * also "No new migrations found." moved to @see MigrateController::getNewMigrations() beacause of responsibility
 	 *
-	 * with $data as array @used-by MigrateController::actionMask() after get masked migrations
+	 * $data as array @used-by MigrateController::actionMask() after get masked migrations.
+	 * contains filtered list of $migrations
 	 *
 	 * Upgrades the application by applying new migrations.
 	 *
@@ -141,17 +144,22 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	 */
 	public function actionUp( $data = null )
 	{
-		$result = $this->getNewMigrations( $data );
-		
-		if( $result == ExitCode::OK ) {
-			
-			$this->stdout( "No new migrations found. Your system is up-to-date.\n", Console::FG_GREEN );
-			
-			return ExitCode::OK;
-			
+		if( is_array( $data ) ) {
+			$migrations = $data;
 		}
 		else {
-			$migrations = (array)$result;
+			$result = $this->getNewMigrations( $data );
+			
+			if( $result == ExitCode::OK ) {
+				
+				$this->stdout( "No new migrations found. Your system is up-to-date.\n", Console::FG_GREEN );
+				
+				return ExitCode::OK;
+				
+			}
+			else {
+				$migrations = (array)$result;
+			}
 		}
 		
 		$total = count( $migrations );
@@ -196,7 +204,7 @@ class MigrateController extends \yii\console\controllers\MigrateController
 				$applied++;
 			}
 			
-			$this->stdout( "\n$n " . ( $n === 1 ? 'migration was' : 'migrations were' ) . " applied.\n", Console::FG_GREEN );
+			//$this->stdout( "\n$n " . ( $n === 1 ? 'migration was' : 'migrations were' ) . " applied.\n", Console::FG_GREEN );
 			$this->stdout( "\nOrder of applied migrations:\n\n", Console::FG_GREEN );
 			
 			/**
@@ -224,6 +232,32 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		return parent::runAction( $id, $params );
 	}
 	
+	protected function _filterMigrationsByGroup( $migrations = [] )
+	{
+		foreach( $this->_migrationsByGroup as $path => $group ) {
+			foreach( $group as $class => $file ) {
+				if( !in_array($class, $migrations)){
+					
+					unset($this->_migrationsByGroup[$path][$class]);
+					
+					if(!count($this->_migrationsByGroup[$path])){
+						unset($this->_migrationsByGroup[$path]);
+					}
+					
+				}
+			}
+		}
+	}
+	
+	/**
+	 * @param null|integer|array $data
+	 * @param string $sort
+	 * @return array
+	 *
+	 * if $data is null - collect all migrations
+	 * if $data is array - it contains migrationPaths
+	 * if $data is integer - collect all migrations but $limit list by $data value
+	 */
 	protected function getNewMigrations( $data = null, $sort = self::SORT_BY_GROUP )
 	{
 		$migrations = [];
@@ -373,9 +407,9 @@ class MigrateController extends \yii\console\controllers\MigrateController
 		}
 		else {
 			
-			foreach( $this->_applied ?? [] as $key => $value ) {
-				if( strpos( $key, ( new\ReflectionClass( $class ) )->getShortName() ) !== false
-					|| ( is_subclass_of( $class, $key ) && !is_subclass_of( $class, yozh\base\components\db\Migration::class ) )
+			foreach( $this->_applied ?? [] as $appliedClass => $value ) {
+				if( strpos( $appliedClass, ( new\ReflectionClass( $class ) )->getShortName() ) !== false
+					|| ( is_subclass_of( $class, $appliedClass ) && !is_subclass_of( $class, \yozh\base\components\db\Migration::class ) )
 				) {
 					return true;
 				}
