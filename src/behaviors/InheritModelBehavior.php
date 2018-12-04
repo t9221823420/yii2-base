@@ -4,6 +4,8 @@
  * User: bw_dev
  * Date: 16.09.2018
  * Time: 12:40
+ *
+ * used as Decorator
  */
 
 namespace yozh\base\behaviors;

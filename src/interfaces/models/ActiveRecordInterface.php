@@ -20,4 +20,6 @@ interface ActiveRecordInterface extends \yii\db\ActiveRecordInterface
 	
 	public function getRawAttributes( ?array $only = null, ?array $except = [], ?bool $schemaOnly = false );
 	
+	public function rules( $rules = [], $update = false );
+	
 }
