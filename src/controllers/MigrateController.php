@@ -26,11 +26,11 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	
 	public $alterMode = Migration::ALTER_MODE_UPDATE;
 	
-	protected $_dropIdxs;
+	protected $_dropExistIdxs;
 	
 	protected $_truncateIdxs;
 	
-	protected $_dropFks;
+	protected $_dropExistFks;
 	
 	protected $_migrations = [];
 	
@@ -41,8 +41,8 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	public function options( $actionID )
 	{
 		return array_unique( array_merge( parent::options( $actionID ), [
-			'dropFks',
-			'dropIdxs',
+			'dropExistFks',
+			'dropExistIdxs',
 			'truncateIdxs',
 			'alterMode',
 		] ) );
@@ -52,8 +52,8 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	{
 		switch( $name ) {
 			
-			case 'dropFks' :
-			case 'dropIdxs' :
+			case 'dropExistFks' :
+			case 'dropExistIdxs' :
 			case 'truncateIdxs' :
 				
 				$name = '_' . $name;
@@ -69,8 +69,8 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	{
 		switch( $name ) {
 			
-			case 'dropFks' :
-			case 'dropIdxs' :
+			case 'dropExistFks' :
+			case 'dropExistIdxs' :
 			case 'truncateIdxs' :
 				
 				$name = '_' . $name;
