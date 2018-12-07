@@ -55,8 +55,7 @@ trait EditActionTrait
 		
 		if( $clone ){
 			
-			$Model->emptyPrimaryKey();
-			$Model->setOldAttributes( null );
+			$Model->setIsNewRecord();
 			
 			// Event CLONE_RESET_INITIAL_MODEL
 			

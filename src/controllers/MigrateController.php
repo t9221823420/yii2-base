@@ -222,9 +222,7 @@ class MigrateController extends \yii\console\controllers\MigrateController
 	
 	public function runAction( $id, $params = [] )
 	{
-		/**
-		 * because of $migrationPaths = array_merge( ( $this->migrationPath ?? [] ), ( $this->migrationNamespaces ?? [] ) ); in getNewMigrations
-		 */
+		 // because of $migrationPaths = array_merge( ( $this->migrationPath ?? [] ), ( $this->migrationNamespaces ?? [] ) ); in getNewMigrations
 		if( isset( $params['migrationPath'] ) || isset( $params['migrationNamespaces'] ) ) {
 			$this->migrationPath = $this->migrationNamespaces = [];
 		}

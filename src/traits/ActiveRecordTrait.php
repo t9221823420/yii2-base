@@ -16,11 +16,6 @@ use yozh\base\models\BaseActiveQuery as ActiveQuery;
 trait ActiveRecordTrait
 {
 	
-	public function rules( $rules = [], $update = false )
-	{
-		return $rules;
-	}
-	
 	public static function getRawTableName( $alias = null )
 	{
 		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
@@ -109,13 +104,13 @@ trait ActiveRecordTrait
 			if( preg_match( '/(?<type>[a-z]+)[\(]{0,}(?<size>\d*)/', $config->dbType, $matches ) ) {
 				
 				if( $matches['type'] == 'tinyint' && $matches['size'] == 1 ) { //boolean
-					$config->type = 'integer';
+					$config->type    = 'integer';
 					$config->phpType = 'boolean';
 				}
 				
 				else if( $matches['type'] == 'enum' ) {
-					$config->phpType   = 'array';
-					$config->dbType = 'enum';
+					$config->phpType = 'array';
+					$config->dbType  = 'enum';
 				}
 				
 				else if( $matches['type'] == 'set' ) {
@@ -123,15 +118,15 @@ trait ActiveRecordTrait
 					/**
 					 * @todo temporary hack
 					 */
-					if( preg_match_all("/'[^']*'/", $config->dbType, $values) ){
-						foreach ($values[0] as $i => $value) {
-							$values[$i] = trim($value, "'");
+					if( preg_match_all( "/'[^']*'/", $config->dbType, $values ) ) {
+						foreach( $values[0] as $i => $value ) {
+							$values[ $i ] = trim( $value, "'" );
 						}
 						$config->enumValues = $values;
 					}
 					
-					$config->phpType   = 'array';
-					$config->dbType = 'set';
+					$config->phpType = 'array';
+					$config->dbType  = 'set';
 				}
 				
 			}
@@ -205,12 +200,24 @@ trait ActiveRecordTrait
 		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
 	}
 	
+	public function rules( $rules = [], $update = false )
+	{
+		return $rules;
+	}
+	
 	public function emptyPrimaryKey(): ActiveRecord
 	{
 		$this->setAttributes( array_fill_keys( $this->primaryKey(), null ), false );
 		
 		return $this;
 	}
+	
+	public function setIsNewRecord( $setAsNewRecord = true )
+	{
+		$this->emptyPrimaryKey();
+		parent::setIsNewRecord( $setAsNewRecord );
+	}
+	
 	
 	/**
 	 * Returns the list of all attribute names of the model.
