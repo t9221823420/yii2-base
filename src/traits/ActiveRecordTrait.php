@@ -11,6 +11,8 @@ namespace yozh\base\traits;
 use Yii;
 use yii\base\Module;
 use yii\db\ActiveRecord;
+use yii\db\Query;
+use yozh\base\components\db\Reference;
 use yozh\base\models\BaseActiveQuery as ActiveQuery;
 
 trait ActiveRecordTrait
@@ -91,12 +93,48 @@ trait ActiveRecordTrait
 		
 	}
 	
-	public static function getShemaReferences()
+	public static function references( $asArray = false, bool $refresh = false )
 	{
-		return static::getTableSchema()->foreignKeys;
+		static $references;
+		
+		if( is_null( $references ) || $refresh ) {
+			
+			foreach( static::shemaReferences() as $fkName => $reference ) {
+				
+				$refTable = array_shift( $reference );
+				
+				$params = [
+					'name'     => $fkName,
+					'table'    => static::getRawTableName(),
+					'refTable' => $refTable,
+					'link'     => $reference,
+				];
+				
+				if( $asArray ) {
+					$references[ $fkName ] = $params;
+				}
+				else {
+					$references[ $fkName ] = new Reference( $params );
+				}
+				
+			}
+		}
+		
+		return $references;
 	}
 	
-	public static function getShemaColumns()
+	public static function shemaReferences( bool $refresh = false )
+	{
+		static $shemaReferences;
+		
+		if( is_null( $shemaReferences ) || $refresh ) {
+			$shemaReferences = static::getTableSchema()->foreignKeys;
+		}
+		
+		return $shemaReferences;
+	}
+	
+	public static function shemaColumns()
 	{
 		$columns = static::getTableSchema()->columns;
 		
@@ -198,6 +236,92 @@ trait ActiveRecordTrait
 		}
 		
 		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
+	}
+	
+	public function getAttributeReferences( string $attribute, bool $refresh = false )
+	{
+		static $referencesByAttributes = [];
+		
+		if( !array_key_exists( $attribute, $referencesByAttributes ) || $refresh ) {
+			
+			foreach( $this->references() as $fkName => $Reference ) {
+				
+				if( array_key_exists( $attribute, $Reference->link ) ) {
+					$referencesByAttributes[ $attribute ][ $fkName ] = $Reference;
+				}
+				
+			}
+			
+		}
+		
+		return $referencesByAttributes[ $attribute ] ?? false;
+	}
+	
+	public function getAttributeReferenceItems( $attributeName, $mixed, $refCondition = [] )
+	{
+		// supposed to be FK name
+		if( is_string( $mixed ) ) {
+			
+			if( !( $Reference = $this->references()[ $mixed ] ?? false ) ) {
+				return false;
+			}
+			
+		}
+		else if( $mixed instanceof Reference ) {
+			$Reference = $mixed;
+		}
+		else {
+			throw new \yii\base\InvalidParamException( "\$mixed have to be an instance of " . Reference::class );
+		}
+		
+		$refModelClass = $Reference->refModelClass;
+		
+		$refAttributes = Yii::$app->db->getSchema()->getTableSchema( $Reference->refTable )->columns;
+		
+		if( isset( $refAttributes['name'] ) ) {
+			$refLabel = 'name';
+		}
+		else if( isset( $refAttributes['title'] ) ) {
+			$refLabel = 'title';
+		}
+		else {
+			$refLabel = $Reference->link[ $attributeName ];
+		}
+		
+		if( $refModelClass && ( new \ReflectionClass( $refModelClass ) )->implementsInterface( ActiveRecordInterface::class ) ) {
+			
+			//$condition, $key, $value, $indexBy, $orderBy
+			$refItems = $refModelClass::getList( $refCondition, $reference[ $attributeName ], $refLabel, $reference[ $attributeName ] );
+			
+		}
+		
+		else {
+			
+			if( $refGetter = $Reference->getter
+				&& $activeQuery = $Model->$relationGetter()
+			) {
+				
+				$refQuery = clone $activeQuery;
+				
+				// reset ActiveQuery to simple Query
+				$refQuery->primaryModel = null;
+			}
+			else {
+				$refQuery = ( new Query() );
+			}
+			
+			$link = $Reference->link;
+			
+			$refQuery->select( [ $refLabel ] + array_values( $link ) )
+			         ->from( $Reference->refTable )
+			         ->andWhere( $refCondition )
+			;
+			
+			$refItems = $refQuery->indexBy( reset( $link ) )->column();
+			
+		}
+		
+		return $refItems ?? [];
 	}
 	
 	public function rules( $rules = [], $update = false )

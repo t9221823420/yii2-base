@@ -14,7 +14,7 @@ interface ActiveRecordInterface extends \yii\db\ActiveRecordInterface
 	
 	public static function getListQuery( ?array $condition = [], $key = null, $value = null, $indexBy = true, $orderBy = true, $alias = null );
 	
-	public static function getShemaReferences();
+	public static function shemaReferences();
 	
 	public function attributes( ?array $only = null, ?array $except = null, ?bool $schemaOnly = false );
 	

@@ -90,7 +90,7 @@ trait DBRecordTrait
 		
 	}
 	
-	public static function getShemaReferences()
+	public static function shemaReferences()
 	{
 		return static::getTableSchema()->foreignKeys;
 	}

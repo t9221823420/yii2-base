@@ -8,13 +8,11 @@
 
 namespace yozh\base\components\utils;
 
-use yii\base\Component;
+use yozh\base\components\BaseComponent;
 use yozh\base\traits\ObjectTrait;
 
-class GD extends Component
+class GD extends BaseComponent
 {
-	use ObjectTrait;
-	
 	public static function createWatermark( $imagePath, $watermarkPath, $params = null )
 	{
 		switch( pathinfo( $imagePath, PATHINFO_EXTENSION ) ) {
