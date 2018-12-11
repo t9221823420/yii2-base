@@ -12,3 +12,15 @@ table.detail-view th {
     width: 1%;
     white-space: nowrap;
 }
+
+table.detail-view td.nested{
+    padding: 0;
+}
+
+table.detail-view td.nested .table-bordered {
+    border: none;
+}
+
+.sections td.section{
+    vertical-align: top;
+}

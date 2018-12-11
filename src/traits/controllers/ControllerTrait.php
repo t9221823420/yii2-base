@@ -11,9 +11,12 @@ namespace yozh\base\traits\controllers;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\web\Response;
+use yozh\base\traits\ObjectTrait;
 
 trait ControllerTrait
 {
+	use ObjectTrait;
+	
 	public $viewPath;
 	
 	public $jsId;

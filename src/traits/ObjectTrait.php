@@ -31,4 +31,18 @@ trait ObjectTrait
 			? array_combine( $list, $list )
 			: $list;
 	}
+	
+	public static function className( $short = false )
+	{
+		$class = get_called_class();
+		
+		return $short ? ( new\ReflectionClass( $class ) )->getShortName() : $class;
+	}
+	
+	public static function namespace( )
+	{
+		$class = get_called_class();
+		
+		return ( new\ReflectionClass( $class ) )->getNamespaceName();
+	}
 }

@@ -6,9 +6,11 @@ use Yii;
 use yii\base\BootstrapInterface;
 use yozh\base\controllers\MigrateController;
 use yozh\base\components\UrlRule;
+use yozh\base\traits\ObjectTrait;
 
 abstract class Bootstrap implements BootstrapInterface
 {
+	use ObjectTrait;
 	
 	public function bootstrap( $app )
 	{

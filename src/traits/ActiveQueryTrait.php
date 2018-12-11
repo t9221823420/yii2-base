@@ -10,6 +10,8 @@ namespace yozh\base\traits;
 
 trait ActiveQueryTrait
 {
+	use ObjectTrait;
+	
 	public function getRawTableName( $alias = null )
 	{
 		

@@ -18,22 +18,22 @@ trait IndexActionTrait
 	{
 		$defaultModelClass = $this->controller::defaultModelClass();
 		
-		if( $searchModelClass = $this->controller::defaultSearchModelClass() ) {
-			$searchModel  = new $searchModelClass;
-			$dataProvider = $searchModel->search( Yii::$app->request->queryParams );
+		if( $ModelSearchClass = $this->controller::defaultSearchModelClass() ) {
+			$ModelSearch  = new $ModelSearchClass;
+			$dataProvider = $ModelSearch->search( Yii::$app->request->queryParams );
 		}
 		else {
 			
-			$searchModel = new $defaultModelClass;
+			$ModelSearch = new $defaultModelClass;
 			
 			$dataProvider = new ActiveDataProvider( [
-				'query' => $searchModel::find(),
+				'query' => $ModelSearch::find(),
 			] );
 			
 		}
 		
 		return [
-			'searchModel'  => $searchModel,
+			'ModelSearch'  => $ModelSearch,
 			'dataProvider' => $dataProvider,
 		];
 	}

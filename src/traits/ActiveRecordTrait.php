@@ -14,13 +14,48 @@ use yii\db\ActiveRecord;
 use yii\db\Query;
 use yozh\base\components\db\Reference;
 use yozh\base\models\BaseActiveQuery as ActiveQuery;
+use yozh\base\models\BaseActiveAttribute as ActiveAttribute;
 
 trait ActiveRecordTrait
 {
+	use ObjectTrait;
 	
 	public static function getRawTableName( $alias = null )
 	{
 		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
+	}
+	
+	public function __set( $name, $value )
+	{
+		parent::__set( $name, $value );
+		
+		if( $this->hasAttribute( $name ) ) {
+			
+			$ActiveAttribute = $this->_activeAttributes[ $name ] ?? new ActiveAttribute( [
+					'model' => $this,
+					'name' => $name,
+				] );
+			
+			$ActiveAttribute->value = $value;
+			
+			$this->_activeAttributes[ $name ] = $ActiveAttribute;
+		}
+		
+	}
+	
+	public function getActiveAttribute( $name )
+	{
+		if( $this->hasAttribute( $name ) ) {
+			
+			if( !( $this->_activeAttributes[ $name ] ?? null ) instanceof ActiveAttribute ) {
+				
+				$this->__set( $name, $this->_attributes[ $name ] );
+				
+			}
+			
+			return $this->_activeAttributes[ $name ];
+			
+		}
 	}
 	
 	/**
@@ -93,7 +128,7 @@ trait ActiveRecordTrait
 		
 	}
 	
-	public static function references( $asArray = false, bool $refresh = false )
+	public static function references( bool $asArray = false, bool $refresh = false )
 	{
 		static $references;
 		
@@ -257,7 +292,7 @@ trait ActiveRecordTrait
 		return $referencesByAttributes[ $attribute ] ?? false;
 	}
 	
-	public function getAttributeReferenceItems( $attributeName, $mixed, $refCondition = [] )
+	public function getAttributeReferenceItems( string $attributeName, $mixed, $refCondition = [] )
 	{
 		// supposed to be FK name
 		if( is_string( $mixed ) ) {
@@ -342,7 +377,6 @@ trait ActiveRecordTrait
 		parent::setIsNewRecord( $setAsNewRecord );
 	}
 	
-	
 	/**
 	 * Returns the list of all attribute names of the model.
 	 * The default implementation will return all column names of the table associated with this AR class.
@@ -420,7 +454,13 @@ trait ActiveRecordTrait
 	
 	public function isReadOnlyAttribute( string $name ): bool
 	{
-		return in_array( $name, $this->readOnlyAttributes() );
+		if ( $this->$name instanceof ActiveAttribute ){
+			return $this->$name->readOnly;
+		}
+		else{
+			return in_array( $name, $this->readOnlyAttributes() );
+		}
+		
 	}
 	
 	public function resetAttribute( $name )
