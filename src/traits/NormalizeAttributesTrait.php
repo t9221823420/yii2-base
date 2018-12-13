@@ -19,7 +19,7 @@ use yozh\base\interfaces\models\ActiveRecordInterface;
 
 trait NormalizeAttributesTrait
 {
-	protected function _normalizeAttributes( $Model, array $attributes = [] )
+	protected function _normalizeAttributes( $Model = null, ?array $attributes = [] )
 	{
 		if( empty( $attributes ) ) {
 			
@@ -78,28 +78,25 @@ trait NormalizeAttributesTrait
 				continue;
 			}
 			
-			if( isset( $attribute['attribute'] ) || isset( $attribute['name'] ) ) {
-				
-				$attributeName = $attribute['attribute'] ?? $attribute['name'] ?? null;
-				
-				if( !isset( $attribute['label'] ) ) {
-					$attribute['label'] = $Model instanceof Model
-						? $Model->getAttributeLabel( $attributeName )
-						: Inflector::camel2words( $attributeName, true );
-				}
-				
-				if( $attribut['value'] ?? true ) {
-					$attribute['value'] = ArrayHelper::getValue( $Model, $attributeName );
-				}
-				
-			}
-			else if( !isset( $attribute['label'] ) || !array_key_exists( 'value', $attribute ) ) {
-				throw new InvalidConfigException( 'The attribute configuration requires the "attribute" element to determine the value and display label.' );
-			}
+			$attribute['attribute'] = $attribute['name'] = $attribute['attribute'] ?? $attribute['name'] ?? $key;
 			
-			$attribute['label'] = preg_replace( '/\sId$/', '', $attribute['label']);
+			/**
+			 * if used prepared attributes and 'nested' w/o initial $Model like
+			 * TreeView::widget( [
+			 *  'attributes' => $attributes,
+			 * ] )
+			 * , it's need to set 'value' => false/'' in attributes, because in common case $Model's attribues differs from normilized one
+			 * , but in this case it's the same, because $Models is set from $attributes in init() of widget
+			 */
+			$attribute['value'] = $attribute['value'] ?? ArrayHelper::getValue( $Model, $attribute['attribute'] ) ;
 			
-			if( $this->encodeLabel ){
+			$attribute['label'] = $attribute['label'] ?? $attribute['label'] = $Model instanceof Model
+					? $Model->getAttributeLabel( $attribute['attribute'] )
+					: Inflector::camel2words( $attribute['attribute'], true );
+			
+			$attribute['label'] = preg_replace( '/\sId$/', '', $attribute['label'] );
+			
+			if( $this->encodeLabel ) {
 				$attribute['label'] = Html::encode( $attribute['label'] );
 			}
 			

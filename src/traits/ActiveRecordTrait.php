@@ -279,7 +279,7 @@ trait ActiveRecordTrait
 		
 		if( !array_key_exists( $attribute, $referencesByAttributes ) || $refresh ) {
 			
-			foreach( $this->references() as $fkName => $Reference ) {
+			foreach( $this->references() ?? [] as $fkName => $Reference ) {
 				
 				if( array_key_exists( $attribute, $Reference->link ) ) {
 					$referencesByAttributes[ $attribute ][ $fkName ] = $Reference;
