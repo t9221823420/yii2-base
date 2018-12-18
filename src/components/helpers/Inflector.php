@@ -13,19 +13,6 @@ use yii\base\Model;
 
 class Inflector extends \yii\helpers\Inflector
 {
-    /**
-     * convert {{%ent_entity_item}} to ent_entity_item
-     * @param $tableName
-     * @return string
-     * @used-by \common\modules\relations\Relation::link
-     */
-    /*
-        public static function tableName()
-        {
-            return '{{%' . Inflector::camel2id(StringHelper::basename(get_called_class()), '_') . '}}';
-        }
-
-     */
     public static function resolveTableName($tableName)
     {
         $db = Yii::$app->db;
@@ -37,6 +24,17 @@ class Inflector extends \yii\helpers\Inflector
         return $tablePrefix . $matches[ 'tableName' ];
     }
 	
+	public static function firstCaps( $value )
+	{
+		$value  = static::humanize($value, true);
+		
+		if( preg_match_all( '/(?<=\s|^|-|_)[A-Z]/', $value, $matches ) ){
+			$value = implode( '', $matches[0] );
+		}
+		
+		return $value;
+	}
+ 
 	public static function attributes2id( Model $Model, Array $attributes = null )
 	{
 		return static::array2html( $Model->getAttributes( $attributes ) );

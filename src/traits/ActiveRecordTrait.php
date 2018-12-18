@@ -123,7 +123,7 @@ trait ActiveRecordTrait
 			return new $class( static::class );
 		}
 		else {
-			return new ActiveQuery( static::class );
+			return parent::find();
 		}
 		
 	}
