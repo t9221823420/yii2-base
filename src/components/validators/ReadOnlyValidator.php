@@ -8,7 +8,7 @@
 
 namespace yozh\base\components\validators;
 
-class ReadOnlyValidator extends BaseValidator
+class ReadOnlyValidator extends Validator
 {
 	public function validateAttribute( $Model, $attribute )
 	{
