@@ -25,39 +25,6 @@ trait ActiveRecordTrait
 		return $alias ?? Yii::$app->db->schema->getRawTableName( static::tableName() );
 	}
 	
-	public function __set( $name, $value )
-	{
-		parent::__set( $name, $value );
-		
-		if( $this->hasAttribute( $name ) ) {
-			
-			$ActiveAttribute = $this->_activeAttributes[ $name ] ?? new ActiveAttribute( [
-					'model' => $this,
-					'name' => $name,
-				] );
-			
-			$ActiveAttribute->value = $value;
-			
-			$this->_activeAttributes[ $name ] = $ActiveAttribute;
-		}
-		
-	}
-	
-	public function getActiveAttribute( $name )
-	{
-		if( $this->hasAttribute( $name ) ) {
-			
-			if( !( $this->_activeAttributes[ $name ] ?? null ) instanceof ActiveAttribute ) {
-				
-				$this->__set( $name, $this->_attributes[ $name ] );
-				
-			}
-			
-			return $this->_activeAttributes[ $name ];
-			
-		}
-	}
-	
 	/**
 	 * Return records as Array id => column for dropdowns
 	 *
@@ -123,7 +90,8 @@ trait ActiveRecordTrait
 			return new $class( static::class );
 		}
 		else {
-			return parent::find();
+			// create yozh\base\models\BaseActiveQuery object instead parent standart yii\db\ActiveQuery
+			return Yii::createObject( ActiveQuery::class, [ get_called_class() ] );
 		}
 		
 	}
@@ -271,6 +239,39 @@ trait ActiveRecordTrait
 		}
 		
 		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
+	}
+	
+	public function __set( $name, $value )
+	{
+		parent::__set( $name, $value );
+		
+		if( $this->hasAttribute( $name ) ) {
+			
+			$ActiveAttribute = $this->_activeAttributes[ $name ] ?? new ActiveAttribute( [
+					'model' => $this,
+					'name'  => $name,
+				] );
+			
+			$ActiveAttribute->value = $value;
+			
+			$this->_activeAttributes[ $name ] = $ActiveAttribute;
+		}
+		
+	}
+	
+	public function getActiveAttribute( $name )
+	{
+		if( $this->hasAttribute( $name ) ) {
+			
+			if( !( $this->_activeAttributes[ $name ] ?? null ) instanceof ActiveAttribute ) {
+				
+				$this->__set( $name, $this->_attributes[ $name ] );
+				
+			}
+			
+			return $this->_activeAttributes[ $name ];
+			
+		}
 	}
 	
 	public function getAttributeReferences( string $attribute, bool $refresh = false )
@@ -454,10 +455,10 @@ trait ActiveRecordTrait
 	
 	public function isReadOnlyAttribute( string $name ): bool
 	{
-		if ( $this->$name instanceof ActiveAttribute ){
+		if( $this->$name instanceof ActiveAttribute ) {
 			return $this->$name->readOnly;
 		}
-		else{
+		else {
 			return in_array( $name, $this->readOnlyAttributes() );
 		}
 		
