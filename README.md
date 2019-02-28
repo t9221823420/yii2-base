@@ -3,10 +3,10 @@
     <hr>
 </h1>
 
-[![Latest Stable Version](https://poser.pugx.org/yozh/yii2-base/v/stable)](https://packagist.org/packages/yozh/yii2-base)
-[![Total Downloads](https://poser.pugx.org/yozh/yii2-base/downloads)](https://packagist.org/packages/yozh/yii2-base)
-[![Latest Unstable Version](https://poser.pugx.org/yozh/yii2-base/v/unstable)](https://packagist.org/packages/yozh/yii2-base)
-[![License](https://poser.pugx.org/yozh/yii2-base/license)](https://packagist.org/packages/yozh/yii2-base)
+[![Unstable Version](https://poser.pugx.org/yozh/yii2-base/v/unstable)](https://packagist.org/packages/yozh/yii2-base)
+[![Total Downloads](https://img.shields.io/packagist/dt/yozh/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
+[![License](https://img.shields.io/github/license/t9221823420/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
+[![PHP](https://img.shields.io/packagist/php-v/yozh/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
 
 This is a basic library containing basic classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and are also recommended for use in the wide majority of typical projects.
 
