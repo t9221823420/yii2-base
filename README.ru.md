@@ -3,7 +3,7 @@
     <hr>
 </h1>
 
-This is a basic library containing basic classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and are also recommended for use in the wide majority of typical projects.
+Это базовая библиотека, содержащая основные классы, трейты, хелперы и утилиты, которые широко используются библиотеками Yozh, а также рекомендуются к использованию в подавляющем большинстве типовых проектов.
 
 ## Extension Classes
 
