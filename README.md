@@ -1,3 +1,5 @@
+{% assign complete="bla bla bla" %}
+{{ complete }}
 <h1 align="center">
     yozh/yii2-base
     <hr>
