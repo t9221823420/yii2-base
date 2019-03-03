@@ -1,20 +1,21 @@
 <h1 align="center">
     yozh/yii2-base
-    <hr>
 </h1>
+
+[README на русском языке](https://github.com/t9221823420/yii2-base/blob/master/README.ru.md)
 
 [![Unstable Version](https://poser.pugx.org/yozh/yii2-base/v/unstable)](https://packagist.org/packages/yozh/yii2-base)
 [![Total Downloads](https://img.shields.io/packagist/dt/yozh/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
 [![License](https://img.shields.io/github/license/t9221823420/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
 [![PHP](https://img.shields.io/packagist/php-v/yozh/yii2-base.svg)](https://packagist.org/packages/yozh/yii2-base)
 
-This is a basic library containing basic classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and are also recommended for use in the wide majority of typical projects.
+This is a basic library containing base classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and are also recommended for use in the wide majority of typical projects.
 
-## Extension Classes
+## Classes
 
 ... in progress
 
-## Extension Traits
+## Traits
 
 ... in progress
 
