@@ -1,6 +1,5 @@
 <h1 align="center">
     yozh/yii2-base
-    <hr>
 </h1>
 
 [![Unstable Version](https://poser.pugx.org/yozh/yii2-base/v/unstable)](https://packagist.org/packages/yozh/yii2-base)
