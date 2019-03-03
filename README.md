@@ -9,7 +9,7 @@
 
 [README на русском языке](https://github.com/t9221823420/yii2-base/blob/master/README.ru.md)
 
-This is a basic library containing base classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and are also recommended for use in the wide majority of typical projects.
+This is a basic library containing base classes, traits, helpers, and utilities that are widely used by the Yozh libraries, and also are recommended for use in the wide majority of typical projects.
 
 ## Classes
 
