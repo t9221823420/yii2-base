@@ -41,6 +41,7 @@ trait ActiveAttributeTrait
 		'readOnly',
 	];
 	
+	
 	public function __construct( $config = [] )
 	{
 		if( $config['model'] ?? false && $config['model'] instanceof Model) {

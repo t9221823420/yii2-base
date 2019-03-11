@@ -241,6 +241,7 @@ trait ActiveRecordTrait
 		return static::getListQuery( $condition, $key, $value, $indexBy, $orderBy )->column();
 	}
 	
+	/* disable ActiveAttributes
 	public function __set( $name, $value )
 	{
 		parent::__set( $name, $value );
@@ -258,6 +259,7 @@ trait ActiveRecordTrait
 		}
 		
 	}
+	*/
 	
 	public function getActiveAttribute( $name )
 	{

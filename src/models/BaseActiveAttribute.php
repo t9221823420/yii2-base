@@ -23,8 +23,15 @@ class BaseActiveAttribute extends Arrayable
 	
 	const DEFAULT_FORMAT = 'text';
 	
-	protected $_format = self::DEFAULT_FORMAT;
+	public function __construct( array $config = [] ) {
+		
+		parent::__construct( $config );
+		
+		$this->_format = self::DEFAULT_FORMAT;
+	}
 	
+	
+	/*
 	public static function test()
 	{
 		$attribute = new self( [
@@ -57,6 +64,6 @@ class BaseActiveAttribute extends Arrayable
 		
 		$attribute['bar'] = 'foo';
 	}
-	
+	*/
 	
 }
